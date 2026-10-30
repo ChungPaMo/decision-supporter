@@ -1,0 +1,253 @@
+"""initial schema v1: batches, master data, demand, BOM, inventory, capacity, forecast, approval guards
+
+Revision ID: 0001
+Revises:
+"""
+from alembic import op
+
+revision = "0001"
+down_revision = None
+branch_labels = None
+depends_on = None
+
+GOVERNED = ['product', 'material', 'monthly_demand', 'sales_order', 'bom_header', 'bom_line', 'inventory', 'production_capacity']
+
+# 생성 시점의 app/models.py 에서 뽑아 고정한 DDL. 이후 변경은 새 마이그레이션으로 추가하고 이 목록은 고치지 않는다.
+TABLES_DDL = [
+    """CREATE TABLE import_batch (
+	batch_id UUID DEFAULT gen_random_uuid() NOT NULL,
+	source_type VARCHAR(20) NOT NULL,
+	source_name VARCHAR(260) NOT NULL,
+	source_note VARCHAR(500),
+	source_sha256 VARCHAR(64) NOT NULL,
+	status VARCHAR(12) DEFAULT 'UPLOADED' NOT NULL,
+	uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+	approved_by VARCHAR(60),
+	approved_at TIMESTAMP WITH TIME ZONE,
+	blocking_error_count INTEGER DEFAULT '0' NOT NULL,
+	PRIMARY KEY (batch_id),
+	CONSTRAINT ck_source_type_sourcetype CHECK (source_type IN ('PUBLIC_DEMAND', 'SYNTHETIC', 'CLIENT_UPLOAD')),
+	CONSTRAINT ck_status_batchstatus CHECK (status IN ('UPLOADED', 'VALIDATED', 'APPROVED', 'REJECTED')),
+	CONSTRAINT ck_batch_sha_len CHECK (char_length(source_sha256) = 64),
+	CONSTRAINT ck_batch_no_errors_when_approved CHECK (blocking_error_count >= 0 AND (status <> 'APPROVED' OR blocking_error_count = 0)),
+	CONSTRAINT ck_batch_approved_meta CHECK (status <> 'APPROVED' OR (approved_by IS NOT NULL AND approved_at IS NOT NULL))
+)""",
+    """CREATE UNIQUE INDEX uq_batch_live_sha ON import_batch (source_sha256) WHERE status <> 'REJECTED'""",
+    """CREATE TABLE unit (
+	unit_code VARCHAR(40) NOT NULL,
+	dimension VARCHAR(10) NOT NULL,
+	to_base_factor NUMERIC(24, 12) NOT NULL,
+	PRIMARY KEY (unit_code),
+	CONSTRAINT ck_dimension_unitdimension CHECK (dimension IN ('COUNT', 'MASS', 'TIME')),
+	CONSTRAINT ck_unit_factor_pos CHECK (to_base_factor > 0)
+)""",
+    """CREATE TABLE inventory (
+	item_type VARCHAR(10) NOT NULL,
+	item_id VARCHAR(40) NOT NULL,
+	as_of_date DATE NOT NULL,
+	on_hand_qty NUMERIC(18, 4) NOT NULL,
+	allocated_qty NUMERIC(18, 4) DEFAULT '0' NOT NULL,
+	unit VARCHAR(40) NOT NULL,
+	batch_id UUID NOT NULL,
+	PRIMARY KEY (item_type, item_id, as_of_date),
+	CONSTRAINT ck_item_type_itemtype CHECK (item_type IN ('PRODUCT', 'MATERIAL')),
+	CONSTRAINT ck_inventory_qty CHECK (on_hand_qty >= 0 AND allocated_qty >= 0 AND allocated_qty <= on_hand_qty),
+	FOREIGN KEY(unit) REFERENCES unit (unit_code),
+	FOREIGN KEY(batch_id) REFERENCES import_batch (batch_id)
+)""",
+    """CREATE TABLE material (
+	material_id VARCHAR(40) NOT NULL,
+	material_name VARCHAR(200) NOT NULL,
+	base_unit VARCHAR(40) NOT NULL,
+	safety_stock_qty NUMERIC(18, 4) DEFAULT '0' NOT NULL,
+	batch_id UUID NOT NULL,
+	PRIMARY KEY (material_id),
+	CONSTRAINT ck_material_ss CHECK (safety_stock_qty >= 0),
+	FOREIGN KEY(base_unit) REFERENCES unit (unit_code),
+	FOREIGN KEY(batch_id) REFERENCES import_batch (batch_id)
+)""",
+    """CREATE TABLE product (
+	product_id VARCHAR(40) NOT NULL,
+	product_name VARCHAR(200) NOT NULL,
+	product_type VARCHAR(15) NOT NULL,
+	base_unit VARCHAR(40) NOT NULL,
+	safety_stock_qty NUMERIC(18, 4) DEFAULT '0' NOT NULL,
+	batch_id UUID NOT NULL,
+	PRIMARY KEY (product_id),
+	CONSTRAINT ck_product_type_producttype CHECK (product_type IN ('FINISHED', 'SEMI_FINISHED')),
+	CONSTRAINT ck_product_ss CHECK (safety_stock_qty >= 0),
+	FOREIGN KEY(base_unit) REFERENCES unit (unit_code),
+	FOREIGN KEY(batch_id) REFERENCES import_batch (batch_id)
+)""",
+    """CREATE TABLE production_capacity (
+	resource_id VARCHAR(40) NOT NULL,
+	resource_name VARCHAR(200) NOT NULL,
+	regular_hours_per_day NUMERIC(5, 2) NOT NULL,
+	overtime_hours_per_day_max NUMERIC(5, 2) NOT NULL,
+	batch_id UUID NOT NULL,
+	PRIMARY KEY (resource_id),
+	CONSTRAINT ck_capacity_hours CHECK (regular_hours_per_day >= 0 AND overtime_hours_per_day_max >= 0 AND regular_hours_per_day + overtime_hours_per_day_max <= 24),
+	FOREIGN KEY(batch_id) REFERENCES import_batch (batch_id)
+)""",
+    """CREATE TABLE bom_header (
+	bom_id VARCHAR(40) NOT NULL,
+	product_id VARCHAR(40) NOT NULL,
+	bom_version VARCHAR(40) NOT NULL,
+	status VARCHAR(10) NOT NULL,
+	is_active BOOLEAN NOT NULL,
+	valid_from DATE NOT NULL,
+	valid_to DATE,
+	base_qty NUMERIC(18, 4) DEFAULT '1' NOT NULL,
+	batch_id UUID NOT NULL,
+	PRIMARY KEY (bom_id),
+	CONSTRAINT ck_status_bomstatus CHECK (status IN ('DRAFT', 'APPROVED')),
+	CONSTRAINT uq_bom_product_version UNIQUE (product_id, bom_version),
+	CONSTRAINT ck_bom_active_approved CHECK (NOT (is_active AND status <> 'APPROVED')),
+	CONSTRAINT ck_bom_period CHECK (valid_to IS NULL OR valid_to >= valid_from),
+	CONSTRAINT ck_bom_base_qty CHECK (base_qty > 0),
+	CONSTRAINT ex_bom_active_overlap EXCLUDE USING gist (product_id WITH =, daterange(valid_from, valid_to, '[]') WITH &&) WHERE (is_active),
+	FOREIGN KEY(product_id) REFERENCES product (product_id),
+	FOREIGN KEY(batch_id) REFERENCES import_batch (batch_id)
+)""",
+    """CREATE TABLE demand_forecast (
+	forecast_id INTEGER GENERATED BY DEFAULT AS IDENTITY,
+	product_id VARCHAR(40) NOT NULL,
+	target_month VARCHAR(7) NOT NULL,
+	horizon INTEGER NOT NULL,
+	p50 NUMERIC(18, 4) NOT NULL,
+	p80 NUMERIC(18, 4) NOT NULL,
+	p90 NUMERIC(18, 4) NOT NULL,
+	p50_method VARCHAR(60) NOT NULL,
+	quantile_model_version VARCHAR(60) NOT NULL,
+	trained_until DATE NOT NULL,
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+	PRIMARY KEY (forecast_id),
+	CONSTRAINT ck_forecast_horizon CHECK (horizon >= 1),
+	CONSTRAINT ck_forecast_quantiles CHECK (p50 >= 0 AND p50 <= p80 AND p80 <= p90),
+	CONSTRAINT ck_forecast_month CHECK (target_month ~ '^\d{4}-(0[1-9]|1[0-2])$'),
+	CONSTRAINT uq_forecast_run UNIQUE (product_id, target_month, horizon, quantile_model_version, trained_until),
+	FOREIGN KEY(product_id) REFERENCES product (product_id)
+)""",
+    """CREATE TABLE monthly_demand (
+	product_id VARCHAR(40) NOT NULL,
+	period VARCHAR(7) NOT NULL,
+	demand_qty NUMERIC(18, 4) NOT NULL,
+	unit VARCHAR(40) NOT NULL,
+	batch_id UUID NOT NULL,
+	PRIMARY KEY (product_id, period),
+	CONSTRAINT ck_demand_qty CHECK (demand_qty >= 0),
+	CONSTRAINT ck_demand_period CHECK (period ~ '^\d{4}-(0[1-9]|1[0-2])$'),
+	FOREIGN KEY(product_id) REFERENCES product (product_id),
+	FOREIGN KEY(unit) REFERENCES unit (unit_code),
+	FOREIGN KEY(batch_id) REFERENCES import_batch (batch_id)
+)""",
+    """CREATE TABLE sales_order (
+	order_id VARCHAR(40) NOT NULL,
+	product_id VARCHAR(40) NOT NULL,
+	order_qty NUMERIC(18, 4) NOT NULL,
+	unit VARCHAR(40) NOT NULL,
+	order_date DATE NOT NULL,
+	due_date DATE NOT NULL,
+	status VARCHAR(10) NOT NULL,
+	batch_id UUID NOT NULL,
+	PRIMARY KEY (order_id),
+	CONSTRAINT ck_order_status CHECK (status IN ('OPEN','CLOSED','CANCELLED')),
+	CONSTRAINT ck_order_qty CHECK (order_qty > 0),
+	CONSTRAINT ck_order_dates CHECK (due_date >= order_date),
+	FOREIGN KEY(product_id) REFERENCES product (product_id),
+	FOREIGN KEY(unit) REFERENCES unit (unit_code),
+	FOREIGN KEY(batch_id) REFERENCES import_batch (batch_id)
+)""",
+    """CREATE TABLE bom_line (
+	bom_id VARCHAR(40) NOT NULL,
+	line_no INTEGER NOT NULL,
+	component_type VARCHAR(10) NOT NULL,
+	component_material_id VARCHAR(40),
+	component_product_id VARCHAR(40),
+	qty_per NUMERIC(18, 6) NOT NULL,
+	unit VARCHAR(40) NOT NULL,
+	scrap_rate NUMERIC(7, 6) DEFAULT '0' NOT NULL,
+	batch_id UUID NOT NULL,
+	PRIMARY KEY (bom_id, line_no),
+	CONSTRAINT ck_component_type_componenttype CHECK (component_type IN ('MATERIAL', 'PRODUCT')),
+	CONSTRAINT ck_bomline_no CHECK (line_no >= 1),
+	CONSTRAINT ck_bomline_qty CHECK (qty_per > 0),
+	CONSTRAINT ck_bomline_scrap CHECK (scrap_rate >= 0 AND scrap_rate < 1),
+	CONSTRAINT ck_bomline_component CHECK ((component_type = 'MATERIAL' AND component_material_id IS NOT NULL AND component_product_id IS NULL) OR (component_type = 'PRODUCT' AND component_product_id IS NOT NULL AND component_material_id IS NULL)),
+	FOREIGN KEY(bom_id) REFERENCES bom_header (bom_id),
+	FOREIGN KEY(component_material_id) REFERENCES material (material_id),
+	FOREIGN KEY(component_product_id) REFERENCES product (product_id),
+	FOREIGN KEY(unit) REFERENCES unit (unit_code),
+	FOREIGN KEY(batch_id) REFERENCES import_batch (batch_id)
+)""",
+]
+
+# gen_random_uuid() 는 PG13+ 내장. btree_gist 는 contrib(공식 postgres 이미지에 포함)로 BOM 활성 버전 기간 겹침 차단(EXCLUDE)에 필요하다.
+EXTENSION = "CREATE EXTENSION IF NOT EXISTS btree_gist"
+
+UNIT_SEED = """
+INSERT INTO unit (unit_code, dimension, to_base_factor) VALUES
+  ('EA',  'COUNT', 1),
+  ('kg',  'MASS',  1),
+  ('g',   'MASS',  0.001),
+  ('t',   'MASS',  1000),
+  ('h',   'TIME',  1),
+  ('min', 'TIME',  0.016666666667)
+"""
+
+GUARD_FUNCTION = """
+CREATE FUNCTION require_approved_batch() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM import_batch WHERE batch_id = NEW.batch_id AND status = 'APPROVED') THEN
+    RAISE EXCEPTION 'batch % is not APPROVED: business rows require an approved batch', NEW.batch_id
+      USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
+END $$
+"""
+
+BATCH_LOCK_FUNCTION = """
+CREATE FUNCTION lock_approved_batch() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF OLD.status = 'APPROVED' AND (NEW.status <> OLD.status OR NEW.source_type <> OLD.source_type
+                                  OR NEW.source_sha256 <> OLD.source_sha256) THEN
+    RAISE EXCEPTION 'batch % is APPROVED and immutable', OLD.batch_id USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
+END $$
+"""
+
+# 예측 모듈이 읽는 유일한 수요 입력. 승인되었고 검증 ERROR 가 0인 배치의 행만 보인다 (테이블 직접 조회 금지).
+FORECAST_INPUT_VIEW = """
+CREATE VIEW v_forecast_input_monthly_demand AS
+SELECT d.product_id, d.period, d.demand_qty, d.unit, b.source_type, b.batch_id
+FROM monthly_demand d JOIN import_batch b ON b.batch_id = d.batch_id
+WHERE b.status = 'APPROVED' AND b.blocking_error_count = 0
+"""
+
+
+def upgrade() -> None:
+    op.execute(EXTENSION)
+    for ddl in TABLES_DDL:
+        op.execute(ddl)
+    op.execute(UNIT_SEED)
+    op.execute(GUARD_FUNCTION)
+    op.execute(BATCH_LOCK_FUNCTION)
+    for t in GOVERNED:
+        op.execute(f"CREATE TRIGGER trg_{t}_approved BEFORE INSERT OR UPDATE ON {t} "
+                   f"FOR EACH ROW EXECUTE FUNCTION require_approved_batch()")
+    op.execute("CREATE TRIGGER trg_batch_lock BEFORE UPDATE ON import_batch "
+               "FOR EACH ROW EXECUTE FUNCTION lock_approved_batch()")
+    op.execute(FORECAST_INPUT_VIEW)
+
+
+def downgrade() -> None:
+    op.execute("DROP VIEW IF EXISTS v_forecast_input_monthly_demand")
+    for t in GOVERNED:
+        op.execute(f"DROP TRIGGER IF EXISTS trg_{t}_approved ON {t}")
+    op.execute("DROP TRIGGER IF EXISTS trg_batch_lock ON import_batch")
+    for t in ["demand_forecast", "production_capacity", "inventory", "bom_line", "bom_header", "sales_order",
+              "monthly_demand", "material", "product", "unit", "import_batch"]:
+        op.execute(f"DROP TABLE IF EXISTS {t}")
+    op.execute("DROP FUNCTION IF EXISTS require_approved_batch()")
+    op.execute("DROP FUNCTION IF EXISTS lock_approved_batch()")

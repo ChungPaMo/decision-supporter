@@ -1,0 +1,11 @@
+# 직접 의존성만 기재 (전이 의존성은 backend/requirements.lock 에 고정). 추가·변경 이유는 docs/decisions.md 에 기록한다.
+fastapi==0.162.0            # API
+uvicorn[standard]==0.54.0   # 개발 서버
+sqlalchemy==2.1.6           # ORM (PostgreSQL)
+alembic==1.20.1             # 마이그레이션
+psycopg[binary]==3.3.6      # PostgreSQL 드라이버 (v3)
+pydantic-settings==2.16.2   # .env 설정
+pytest==9.2.0               # 테스트
+httpx==0.28.1               # FastAPI TestClient 의존
+openpyxl==3.1.5            # XLSX 읽기 (PoC E02 와 같은 라이브러리)
+python-multipart==0.0.32    # FastAPI 파일 업로드(UploadFile) 필수

@@ -1,0 +1,38 @@
+# 충파모 MVP 개발용 인프라. 이 프로젝트 전용이며 다른 Docker 프로젝트와 이름·포트·볼륨·네트워크를 공유하지 않는다.
+# 사용법은 README.md. 파괴적 명령(down -v, system prune, volume rm)은 이 프로젝트에서 사용하지 않는다.
+name: chungpamo-mvp
+
+services:
+  db:
+    # 16.6: PostgreSQL 16 계열의 패치 버전 고정(재현성). Debian 기반 이미지를 써서 btree_gist 등 contrib 확장과 로케일이 기본 포함된다.
+    image: postgres:16.6
+    container_name: chungpamo-mvp-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER:-chungpamo_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?.env 에 POSTGRES_ADMIN_PASSWORD 를 설정하세요 (.env.example 참고)}
+      POSTGRES_DB: postgres
+      APP_DB_USER: ${APP_DB_USER:-chungpamo_app}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?.env 에 APP_DB_PASSWORD 를 설정하세요 (.env.example 참고)}
+    ports:
+      # 호스트에서 로컬 Python 이 접속할 때만 필요. 127.0.0.1 에만 바인딩하며 외부 네트워크에는 열리지 않는다.
+      - "127.0.0.1:${DB_HOST_PORT:-55432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  pgdata:
+    name: chungpamo-mvp-pgdata
+
+networks:
+  backend_net:
+    name: chungpamo-mvp-net

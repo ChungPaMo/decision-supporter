@@ -1,0 +1,49 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# 비밀·로컬 설정 (.env.example 만 추적)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+secrets/
+credentials*.json
+.pgdata.log
+
+# DB 파일·덤프·백업 (DB 데이터는 Docker named volume 에만 둔다)
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.sql.gz
+pgdata/
+.pgdata/
+
+# 데이터 원본 (업로드 파일, 공개 데이터 원본, 기업 데이터)
+data/
+uploads/
+*.csv
+*.xlsx
+*.xls
+!contracts/examples/*.csv
+
+# 로컬 도구·임시
+.claude/
+*.tmp
+*.bak
+
+# 기타
+*.log
+.vscode/
+.idea/
+Thumbs.db

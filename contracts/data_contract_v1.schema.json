@@ -1,0 +1,641 @@
+{
+  "contract_version": "1.0",
+  "models": {
+    "BomHeaderRow": {
+      "$defs": {
+        "BomStatus": {
+          "enum": [
+            "DRAFT",
+            "APPROVED"
+          ],
+          "title": "BomStatus",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "base_qty": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": "1",
+          "title": "Base Qty"
+        },
+        "bom_id": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Bom Id",
+          "type": "string"
+        },
+        "bom_version": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Bom Version",
+          "type": "string"
+        },
+        "is_active": {
+          "title": "Is Active",
+          "type": "boolean"
+        },
+        "product_id": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Product Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/BomStatus"
+        },
+        "valid_from": {
+          "format": "date",
+          "title": "Valid From",
+          "type": "string"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valid To"
+        }
+      },
+      "required": [
+        "bom_id",
+        "product_id",
+        "bom_version",
+        "status",
+        "is_active",
+        "valid_from"
+      ],
+      "title": "BomHeaderRow",
+      "type": "object"
+    },
+    "BomLineRow": {
+      "$defs": {
+        "ComponentType": {
+          "enum": [
+            "MATERIAL",
+            "PRODUCT"
+          ],
+          "title": "ComponentType",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "bom_id": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Bom Id",
+          "type": "string"
+        },
+        "component_id": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Component Id",
+          "type": "string"
+        },
+        "component_type": {
+          "$ref": "#/$defs/ComponentType"
+        },
+        "line_no": {
+          "minimum": 1,
+          "title": "Line No",
+          "type": "integer"
+        },
+        "qty_per": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Qty Per"
+        },
+        "scrap_rate": {
+          "anyOf": [
+            {
+              "exclusiveMaximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": "0",
+          "title": "Scrap Rate"
+        },
+        "unit": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "bom_id",
+        "line_no",
+        "component_type",
+        "component_id",
+        "qty_per",
+        "unit"
+      ],
+      "title": "BomLineRow",
+      "type": "object"
+    },
+    "CapacityRow": {
+      "additionalProperties": false,
+      "description": "생산능력. PoC 와 같이 자원별 하루 시간 기준. 제품 1개당 시간(Routing) 환산은 v1 범위 밖.",
+      "properties": {
+        "overtime_hours_per_day_max": {
+          "anyOf": [
+            {
+              "maximum": 24.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Overtime Hours Per Day Max"
+        },
+        "regular_hours_per_day": {
+          "anyOf": [
+            {
+              "maximum": 24.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Regular Hours Per Day"
+        },
+        "resource_id": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Resource Id",
+          "type": "string"
+        },
+        "resource_name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Resource Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "resource_id",
+        "resource_name",
+        "regular_hours_per_day",
+        "overtime_hours_per_day_max"
+      ],
+      "title": "CapacityRow",
+      "type": "object"
+    },
+    "ForecastRow": {
+      "additionalProperties": false,
+      "description": "예측 모듈(예측·최적화 담당) 출력. 제품·목표월별 P50/P80/P90.",
+      "properties": {
+        "horizon": {
+          "maximum": 36,
+          "minimum": 1,
+          "title": "Horizon",
+          "type": "integer"
+        },
+        "p50": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "P50"
+        },
+        "p50_method": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "P50 Method",
+          "type": "string"
+        },
+        "p80": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "P80"
+        },
+        "p90": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "P90"
+        },
+        "product_id": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Product Id",
+          "type": "string"
+        },
+        "quantile_model_version": {
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Quantile Model Version",
+          "type": "string"
+        },
+        "target_month": {
+          "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+          "title": "Target Month",
+          "type": "string"
+        },
+        "trained_until": {
+          "format": "date",
+          "title": "Trained Until",
+          "type": "string"
+        }
+      },
+      "required": [
+        "product_id",
+        "target_month",
+        "horizon",
+        "p50",
+        "p80",
+        "p90",
+        "p50_method",
+        "quantile_model_version",
+        "trained_until"
+      ],
+      "title": "ForecastRow",
+      "type": "object"
+    },
+    "InventoryRow": {
+      "$defs": {
+        "ItemType": {
+          "enum": [
+            "PRODUCT",
+            "MATERIAL"
+          ],
+          "title": "ItemType",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "allocated_qty": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": "0",
+          "title": "Allocated Qty"
+        },
+        "as_of_date": {
+          "format": "date",
+          "title": "As Of Date",
+          "type": "string"
+        },
+        "item_id": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Item Id",
+          "type": "string"
+        },
+        "item_type": {
+          "$ref": "#/$defs/ItemType"
+        },
+        "on_hand_qty": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "On Hand Qty"
+        },
+        "unit": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_type",
+        "item_id",
+        "as_of_date",
+        "on_hand_qty",
+        "unit"
+      ],
+      "title": "InventoryRow",
+      "type": "object"
+    },
+    "MaterialRow": {
+      "additionalProperties": false,
+      "properties": {
+        "base_unit": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Base Unit",
+          "type": "string"
+        },
+        "material_id": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Material Id",
+          "type": "string"
+        },
+        "material_name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Material Name",
+          "type": "string"
+        },
+        "safety_stock_qty": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": "0",
+          "title": "Safety Stock Qty"
+        }
+      },
+      "required": [
+        "material_id",
+        "material_name",
+        "base_unit"
+      ],
+      "title": "MaterialRow",
+      "type": "object"
+    },
+    "MonthlyDemandRow": {
+      "additionalProperties": false,
+      "description": "제품별 월별 수요 실적/주문 합계. 예측 모듈의 입력.",
+      "properties": {
+        "demand_qty": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Demand Qty"
+        },
+        "period": {
+          "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+          "title": "Period",
+          "type": "string"
+        },
+        "product_id": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Product Id",
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "product_id",
+        "period",
+        "demand_qty",
+        "unit"
+      ],
+      "title": "MonthlyDemandRow",
+      "type": "object"
+    },
+    "ProductRow": {
+      "$defs": {
+        "ProductType": {
+          "enum": [
+            "FINISHED",
+            "SEMI_FINISHED"
+          ],
+          "title": "ProductType",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "base_unit": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Base Unit",
+          "type": "string"
+        },
+        "product_id": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Product Id",
+          "type": "string"
+        },
+        "product_name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Product Name",
+          "type": "string"
+        },
+        "product_type": {
+          "$ref": "#/$defs/ProductType"
+        },
+        "safety_stock_qty": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": "0",
+          "title": "Safety Stock Qty"
+        }
+      },
+      "required": [
+        "product_id",
+        "product_name",
+        "product_type",
+        "base_unit"
+      ],
+      "title": "ProductRow",
+      "type": "object"
+    },
+    "SalesOrderRow": {
+      "additionalProperties": false,
+      "properties": {
+        "due_date": {
+          "format": "date",
+          "title": "Due Date",
+          "type": "string"
+        },
+        "order_date": {
+          "format": "date",
+          "title": "Order Date",
+          "type": "string"
+        },
+        "order_id": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Order Id",
+          "type": "string"
+        },
+        "order_qty": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Order Qty"
+        },
+        "product_id": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Product Id",
+          "type": "string"
+        },
+        "status": {
+          "pattern": "^(OPEN|CLOSED|CANCELLED)$",
+          "title": "Status",
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "order_id",
+        "product_id",
+        "order_qty",
+        "unit",
+        "order_date",
+        "due_date",
+        "status"
+      ],
+      "title": "SalesOrderRow",
+      "type": "object"
+    },
+    "UnitRow": {
+      "$defs": {
+        "UnitDimension": {
+          "enum": [
+            "COUNT",
+            "MASS",
+            "TIME"
+          ],
+          "title": "UnitDimension",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "dimension": {
+          "$ref": "#/$defs/UnitDimension"
+        },
+        "to_base_factor": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "To Base Factor"
+        },
+        "unit_code": {
+          "maxLength": 40,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Unit Code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "unit_code",
+        "dimension",
+        "to_base_factor"
+      ],
+      "title": "UnitRow",
+      "type": "object"
+    }
+  }
+}
