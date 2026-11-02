@@ -27,6 +27,8 @@ class ErrorCode(StrEnum):
     ENCODING_UNKNOWN = "ENCODING_UNKNOWN"                  # 422
     DELIMITER_UNKNOWN = "DELIMITER_UNKNOWN"                # 422
     NO_VISIBLE_SHEET = "NO_VISIBLE_SHEET"                  # 422
+    # --- 출력 ---
+    EXPORT_TOO_LARGE = "EXPORT_TOO_LARGE"                  # 413 출력 행 또는 실제 수신한 요청 본문이 한도를 넘음
     # --- 배치 ---
     BATCH_NOT_FOUND = "BATCH_NOT_FOUND"                    # 404
     DUPLICATE_UPLOAD = "DUPLICATE_UPLOAD"                  # 409 같은 파일(SHA-256)이 반려되지 않은 배치로 이미 있음 (details.batch_id)
@@ -42,7 +44,7 @@ class ErrorCode(StrEnum):
     ALREADY_APPROVED = "ALREADY_APPROVED"                  # 409 중복 승인 (details.approved_by, approved_at)
     BATCH_REJECTED = "BATCH_REJECTED"                      # 409 반려된 배치
     RESULT_CHANGED = "RESULT_CHANGED"                      # 409 화면에서 본 검증 결과와 서버의 현재 결과가 다름 → 다시 조회
-    KEYS_ALREADY_APPROVED = "KEYS_ALREADY_APPROVED"        # 409 이미 승인된 (제품, 월) 이 있음 (details.keys). 덮어쓰기 미지원
+    KEYS_ALREADY_APPROVED = "KEYS_ALREADY_APPROVED"        # 409 이미 승인된 키가 있음: 수요 (제품, 월), 재고 (품목, 기준일) (details.keys). 덮어쓰기 미지원
 
 
 class ErrorBody(BaseModel):

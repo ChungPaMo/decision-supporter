@@ -76,7 +76,7 @@ class ImportBatch(Base):
         CheckConstraint("status <> 'READY_FOR_APPROVAL' OR blocking_error_count = 0", name="ck_batch_ready_no_errors"),
         CheckConstraint("status <> 'HAS_ERRORS' OR blocking_error_count > 0", name="ck_batch_errors_counted"),
         CheckConstraint("status <> 'REJECTED' OR (rejected_by IS NOT NULL AND rejected_at IS NOT NULL AND reject_reason IS NOT NULL)", name="ck_batch_rejected_meta"),
-        CheckConstraint("entity IN ('monthly_demand', 'product')", name="ck_batch_entity"),
+        CheckConstraint("entity IN ('monthly_demand', 'product', 'material', 'bom', 'inventory')", name="ck_batch_entity"),
         # 같은 entity 에 같은 원본이 살아있는(반려되지 않은) 배치로 있으면 재업로드를 막는다. 반려 후 재업로드는 허용.
         Index("uq_batch_live_entity_sha", "entity", "source_sha256", unique=True, postgresql_where=text("status <> 'REJECTED'")),
     )

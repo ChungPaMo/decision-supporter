@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Protocol
 
-from app.ingest.validation import KnownProduct
+from app.ingest.validation import KnownBom, KnownMaterial, KnownProduct
 
 
 class RepositoryUnavailable(Exception):
@@ -84,6 +84,77 @@ class ApprovedProduct:
 
 
 @dataclass
+class MaterialInsert:
+    material_id: str
+    material_name: str
+    base_unit: str
+    safety_stock_qty: Decimal
+
+
+@dataclass
+class ApprovedMaterial:
+    material_id: str
+    material_name: str
+    base_unit: str
+    safety_stock_qty: Decimal
+    source_type: str
+    batch_id: uuid.UUID
+
+
+@dataclass
+class BomHeaderInsert:
+    bom_id: str
+    product_id: str
+    bom_version: str
+    status: str
+    is_active: bool
+    valid_from: dt.date
+    valid_to: dt.date | None
+    base_qty: Decimal
+
+
+@dataclass
+class BomLineInsert:
+    bom_id: str
+    line_no: int
+    component_type: str
+    component_id: str
+    qty_per: Decimal
+    unit: str
+    scrap_rate: Decimal
+
+
+@dataclass
+class ApprovedBom:
+    header: BomHeaderInsert
+    lines: list[BomLineInsert]
+    source_type: str
+    batch_id: uuid.UUID
+
+
+@dataclass
+class InventoryInsert:
+    item_type: str
+    item_id: str
+    as_of_date: dt.date
+    on_hand_qty: Decimal
+    allocated_qty: Decimal
+    unit: str
+
+
+@dataclass
+class ApprovedInventory:
+    item_type: str
+    item_id: str
+    as_of_date: dt.date
+    on_hand_qty: Decimal
+    allocated_qty: Decimal
+    unit: str
+    source_type: str
+    batch_id: uuid.UUID
+
+
+@dataclass
 class ApprovedDemand:
     product_id: str
     period: str
@@ -115,6 +186,16 @@ class BatchTx(Protocol):
     def mark_approved(self, batch_id: uuid.UUID, approved_by: str, record_count: int) -> BatchRecord: ...
     def mark_rejected(self, batch_id: uuid.UUID, rejected_by: str, reason: str) -> BatchRecord: ...
     def list_known_products(self) -> list[KnownProduct]: ...
+    def list_known_materials(self) -> list[KnownMaterial]: ...
+    def list_known_boms(self) -> list[KnownBom]: ...
+    def insert_materials(self, batch_id: uuid.UUID, rows: list[MaterialInsert]) -> int: ...
+    def insert_bom(self, batch_id: uuid.UUID, headers: list[BomHeaderInsert], lines: list[BomLineInsert]) -> int: ...
+    def existing_inventory_keys(self, keys: list[tuple[str, str, dt.date]]) -> list[tuple[str, str, dt.date]]: ...
+    def insert_inventory(self, batch_id: uuid.UUID, rows: list[InventoryInsert]) -> int: ...
+    def list_materials(self, material_id: str | None, q: str | None, limit: int, offset: int) -> tuple[list[ApprovedMaterial], int]: ...
+    def list_boms(self, product_id: str | None, bom_id: str | None, active_only: bool, limit: int, offset: int) -> tuple[list[ApprovedBom], int]: ...
+    def list_inventory(self, item_type: str | None, item_id: str | None, as_of_date: dt.date | None,
+                       limit: int, offset: int) -> tuple[list[ApprovedInventory], int]: ...
     def insert_products(self, batch_id: uuid.UUID, rows: list[ProductInsert]) -> int: ...
     def list_products(self, product_id: str | None, q: str | None, limit: int, offset: int) -> tuple[list[ApprovedProduct], int]: ...
     def existing_demand_keys(self, keys: list[tuple[str, str]]) -> list[tuple[str, str]]: ...

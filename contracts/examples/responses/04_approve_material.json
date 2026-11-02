@@ -1,0 +1,143 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "POST",
+    "path": "/batches/00000000-0000-0000-0000-000000000002/approve",
+    "json": {
+      "approved_by": "REVIEWER-01",
+      "expected_result_digest": "b87d761967d9992b6da2e9ace5bd512cde311c5a61db36dc7b3861146da01473"
+    }
+  },
+  "status": 200,
+  "response": {
+    "batch_id": "00000000-0000-0000-0000-000000000002",
+    "entity": "material",
+    "status": "APPROVED",
+    "source_type": "CLIENT_UPLOAD",
+    "source_note": null,
+    "file": {
+      "name": "sample_materials.csv",
+      "sha256": "5efbe8886c55356433fa3653767a0b8967f3113a2bfd2b666504fd750f572457",
+      "size_bytes": 93,
+      "format": "csv"
+    },
+    "version": 2,
+    "created_by": null,
+    "created_at": "2026-11-02T00:00:00Z",
+    "settings": {
+      "default_unit": null,
+      "column_overrides": {},
+      "sheet": null
+    },
+    "blocking_error_count": 0,
+    "warning_count": 0,
+    "result_digest": "b87d761967d9992b6da2e9ace5bd512cde311c5a61db36dc7b3861146da01473",
+    "approval_blockers": [
+      {
+        "code": "ALREADY_APPROVED",
+        "message": "이미 승인된 배치입니다."
+      }
+    ],
+    "approved_by": "REVIEWER-01",
+    "approved_at": "2026-11-01T00:00:02Z",
+    "approved_record_count": 2,
+    "rejected_by": null,
+    "rejected_at": null,
+    "reject_reason": null,
+    "validation": {
+      "entity": "material",
+      "file": {
+        "name": "sample_materials.csv",
+        "format": "csv",
+        "size_bytes": 93,
+        "sha256": "5efbe8886c55356433fa3653767a0b8967f3113a2bfd2b666504fd750f572457",
+        "meta": {
+          "encoding": "utf-8",
+          "delimiter": ","
+        }
+      },
+      "status": "READY_FOR_APPROVAL",
+      "approval_required": true,
+      "auto_approve": false,
+      "master_data_checked": true,
+      "blocking_error_count": 0,
+      "warning_count": 0,
+      "sheets": [
+        {
+          "name": "",
+          "status": "MAPPED",
+          "header_rows": [
+            1
+          ],
+          "data_rows": 2,
+          "mapping": [
+            {
+              "field": "material_id",
+              "col": 1,
+              "header": "자재코드",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "material_name",
+              "col": 2,
+              "header": "자재명",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "base_unit",
+              "col": 3,
+              "header": "단위",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "safety_stock_qty",
+              "col": 4,
+              "header": "안전재고",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            }
+          ],
+          "unmapped_headers": [],
+          "holds": [],
+          "validated": true,
+          "error_rows": 0,
+          "valid_records": 2,
+          "issues": [],
+          "records": [
+            {
+              "material_id": "M001",
+              "material_name": "합성 강판",
+              "base_unit": "kg",
+              "safety_stock_qty": "100",
+              "location": {
+                "sheet": "",
+                "row": 2,
+                "col": null,
+                "cell_ref": null
+              },
+              "review_required": false
+            },
+            {
+              "material_id": "M002",
+              "material_name": "합성 볼트",
+              "base_unit": "EA",
+              "safety_stock_qty": "0",
+              "location": {
+                "sheet": "",
+                "row": 3,
+                "col": null,
+                "cell_ref": null
+              },
+              "review_required": false
+            }
+          ],
+          "issues_total": 0,
+          "records_total": 2
+        }
+      ]
+    }
+  }
+}

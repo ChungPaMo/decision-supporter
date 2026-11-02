@@ -1,4 +1,4 @@
-"""DB 수준 안전장치 시험 (마이그레이션 0003 까지 적용한 DB 필요).
+"""DB 수준 안전장치 시험 (마이그레이션 0004 까지 적용한 DB 필요).
 
 ⚠ 이 파일의 어떤 테스트도 아직 실행·통과한 적이 없다. Docker 가 없는 PC 에서는 skip 되며, Docker 개발 PC 에서
 `docker compose up -d db` + `alembic upgrade head` 후 실행해 skip 이 0 이고 모두 통과해야 검증된 것이다.
@@ -192,14 +192,39 @@ def test_duplicate_upload_blocked_until_rejected(conn):
 
 
 def test_bom_active_versions_cannot_overlap(conn):
-    bid = _approved_batch(conn, n=1, entity="product")
-    _product(conn, bid)
+    _product(conn, _approved_batch(conn, entity="product"))
+    bid = _approved_batch(conn, n=1, entity="bom")
     ins = ("INSERT INTO bom_header (bom_id, product_id, bom_version, status, is_active, valid_from, valid_to, batch_id) "
            "VALUES (:i, 'FG001', :v, 'APPROVED', true, :f, :t, :b)")
     conn.execute(text(ins), dict(i="B1", v="V1", f="2026-01-01", t="2026-06-30", b=bid))
     conn.execute(text(ins), dict(i="B2", v="V2", f="2026-07-01", t=None, b=bid))
     with _fails(conn, exc=IntegrityError):
         conn.execute(text(ins), dict(i="B3", v="V3", f="2026-05-01", t="2026-08-01", b=bid))
+
+
+def test_bom_lines_require_bom_batch_and_are_counted(conn):
+    _product(conn, _approved_batch(conn, entity="product"))
+    conn.execute(text("INSERT INTO material (material_id, material_name, base_unit, batch_id) VALUES ('M1', 'x', 'kg', :b)"),
+                 dict(b=_approved_batch(conn, entity="material")))
+    wrong = _approved_batch(conn, entity="inventory")
+    head = ("INSERT INTO bom_header (bom_id, product_id, bom_version, status, is_active, valid_from, batch_id) "
+            "VALUES ('B1', 'FG001', 'V1', 'APPROVED', true, '2026-01-01', :b)")
+    with _fails(conn, "matching entity"):
+        conn.execute(text(head), dict(b=wrong))
+    bom = _approved_batch(conn, n=1, entity="bom")
+    conn.execute(text(head), dict(b=bom))
+    conn.execute(text("INSERT INTO bom_line (bom_id, line_no, component_type, component_material_id, qty_per, unit, batch_id) "
+                      "VALUES ('B1', 1, 'MATERIAL', 'M1', 2, 'kg', :b)"), dict(b=bom))
+    conn.execute(text("SET CONSTRAINTS trg_batch_record_count IMMEDIATE"))
+
+
+def test_inventory_item_must_be_registered(conn):
+    _product(conn, _approved_batch(conn, entity="product"))
+    inv = _approved_batch(conn, entity="inventory")
+    ins = ("INSERT INTO inventory (item_type, item_id, as_of_date, on_hand_qty, unit, batch_id) VALUES (:t, :i, '2026-10-31', 5, 'EA', :b)")
+    conn.execute(text(ins), dict(t="PRODUCT", i="FG001", b=inv))
+    with _fails(conn, "not registered", exc=IntegrityError):
+        conn.execute(text(ins), dict(t="MATERIAL", i="FG001", b=inv))           # 같은 코드라도 자재로는 미등록
 
 
 def test_forecast_quantile_order_and_period_format(conn):
@@ -243,4 +268,4 @@ def test_rows_cannot_be_added_or_changed_after_the_approving_transaction_commits
                 _approve(c, other, 5)
     finally:
         with test_engine.begin() as c:                                            # 정리: 테스트 DB 만 (TRUNCATE 는 행 트리거를 타지 않는다)
-            c.execute(text("TRUNCATE monthly_demand, product, batch_source_file, import_batch CASCADE"))
+            c.execute(text("TRUNCATE inventory, bom_line, bom_header, material, monthly_demand, product, batch_source_file, import_batch CASCADE"))

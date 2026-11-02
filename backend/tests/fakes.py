@@ -4,6 +4,7 @@
   - 트랜잭션 롤백: 블록이 예외로 끝나면 시작 시점 상태로 복원 (rollbacks 카운트)
   - 상태 전이: READY_FOR_APPROVAL 에서만 APPROVED, 최종 상태 불변
   - 업무 행 쓰기는 같은 트랜잭션에서 승인된, entity 가 일치하는 배치에만 허용, 키 중복 불가
+  - 활성 BOM 기간 겹침 거부 (EXCLUDE 의 모형), BOM 구성품 줄을 approved_record_count 로 셈
 장애 주입: fail_insert_after(N건 쓴 뒤 실패), unavailable(연결 불가)
 """
 
@@ -16,10 +17,10 @@ from contextlib import contextmanager
 from decimal import Decimal
 
 from app.batches.repository import (
-    ApprovedDemand, ApprovedProduct, BatchRecord, DemandRow, DuplicateBatchError, ProductInsert, RepositoryError, RepositoryUnavailable,
-    ValidationUpdate,
+    ApprovedBom, ApprovedDemand, ApprovedInventory, ApprovedMaterial, ApprovedProduct, BatchRecord, BomHeaderInsert, BomLineInsert, DemandRow,
+    DuplicateBatchError, InventoryInsert, MaterialInsert, ProductInsert, RepositoryError, RepositoryUnavailable, ValidationUpdate,
 )
-from app.ingest.validation import KnownProduct
+from app.ingest.validation import KnownBom, KnownMaterial, KnownProduct
 
 FINAL = {"APPROVED", "REJECTED"}
 
@@ -30,6 +31,9 @@ class _State:
         self.files: dict[uuid.UUID, bytes] = {}
         self.demand: dict[tuple[str, str], tuple[DemandRow, uuid.UUID]] = {}
         self.products: dict[str, tuple[ProductInsert, uuid.UUID | None]] = {}    # 시드 제품의 batch_id 는 None
+        self.materials: dict[str, tuple[MaterialInsert, uuid.UUID | None]] = {}
+        self.boms: dict[str, tuple[BomHeaderInsert, list[BomLineInsert], uuid.UUID]] = {}
+        self.inventory: dict[tuple, tuple[InventoryInsert, uuid.UUID]] = {}
 
 
 class FakeTx:
@@ -97,6 +101,77 @@ class FakeTx:
     def list_known_products(self):
         return [KnownProduct(p.product_id, p.product_name, p.base_unit, p.product_type, p.safety_stock_qty) for p, _ in self.s.products.values()]
 
+    def list_known_materials(self):
+        return [KnownMaterial(m.material_id, m.material_name, m.base_unit, m.safety_stock_qty) for m, _ in self.s.materials.values()]
+
+    def list_known_boms(self):
+        return [KnownBom(h.bom_id, h.product_id, h.bom_version, h.is_active, h.valid_from, h.valid_to,
+                         tuple(x.component_id for x in lines if x.component_type == "PRODUCT")) for h, lines, _ in self.s.boms.values()]
+
+    def _tick(self):
+        if self.r.fail_insert_after is not None and self.written >= self.r.fail_insert_after:
+            raise RepositoryError("injected failure")
+        self.written += 1
+
+    def insert_materials(self, batch_id, rows: list[MaterialInsert]):
+        self._writable(batch_id, "material")
+        for r in rows:
+            self._tick()
+            if r.material_id in self.s.materials:
+                raise RepositoryError("duplicate key")
+            self.s.materials[r.material_id] = (r, batch_id)
+        return len(rows)
+
+    def insert_bom(self, batch_id, headers, lines):
+        self._writable(batch_id, "bom")
+        for h in headers:
+            if h.bom_id in self.s.boms or h.product_id not in self.s.products:
+                raise RepositoryError("duplicate key or missing product")
+            for other, _l, _b in self.s.boms.values():
+                if (h.is_active and other.is_active and other.product_id == h.product_id
+                        and (other.valid_to is None or h.valid_from <= other.valid_to) and (h.valid_to is None or other.valid_from <= h.valid_to)):
+                    raise RepositoryError("active BOM overlap")
+            self.s.boms[h.bom_id] = (h, [], batch_id)
+        for x in lines:
+            self._tick()
+            self.s.boms[x.bom_id][1].append(x)
+        return len(lines)
+
+    def existing_inventory_keys(self, keys):
+        return sorted(k for k in keys if k in self.s.inventory)
+
+    def insert_inventory(self, batch_id, rows: list[InventoryInsert]):
+        self._writable(batch_id, "inventory")
+        for r in rows:
+            self._tick()
+            key = (r.item_type, r.item_id, r.as_of_date)
+            known = self.s.products if r.item_type == "PRODUCT" else self.s.materials
+            if key in self.s.inventory or r.item_id not in known:
+                raise RepositoryError("duplicate key or missing item")
+            self.s.inventory[key] = (r, batch_id)
+        return len(rows)
+
+    def _source(self, bid):
+        return self.s.batches[bid].source_type if bid else "SYNTHETIC"
+
+    def list_materials(self, material_id, q, limit, offset):
+        out = [ApprovedMaterial(mid, m.material_name, m.base_unit, m.safety_stock_qty, self._source(bid), bid)
+               for mid, (m, bid) in sorted(self.s.materials.items())
+               if (not material_id or mid == material_id) and (not q or q.casefold() in m.material_name.casefold())]
+        return out[offset:offset + limit], len(out)
+
+    def list_boms(self, product_id, bom_id, active_only, limit, offset):
+        items = sorted(self.s.boms.values(), key=lambda v: (v[0].product_id, v[0].bom_version))
+        out = [ApprovedBom(h, sorted(lines, key=lambda x: x.line_no), self._source(bid), bid) for h, lines, bid in items
+               if (not product_id or h.product_id == product_id) and (not bom_id or h.bom_id == bom_id) and (not active_only or h.is_active)]
+        return copy.deepcopy(out[offset:offset + limit]), len(out)
+
+    def list_inventory(self, item_type, item_id, as_of_date, limit, offset):
+        out = [ApprovedInventory(r.item_type, r.item_id, r.as_of_date, r.on_hand_qty, r.allocated_qty, r.unit, self._source(bid), bid)
+               for key, (r, bid) in sorted(self.s.inventory.items())
+               if (not item_type or r.item_type == item_type) and (not item_id or r.item_id == item_id) and (not as_of_date or r.as_of_date == as_of_date)]
+        return out[offset:offset + limit], len(out)
+
     def _writable(self, batch_id, entity):
         if batch_id not in self.approved_in_tx or self.s.batches[batch_id].entity != entity:
             raise RepositoryError("rows can only be written by the approving transaction of a matching entity")
@@ -148,11 +223,13 @@ class FakeTx:
 
 
 class InMemoryBatchRepository:
-    def __init__(self, products: dict[str, str] | None = None) -> None:
-        """products: 이미 승인되어 있다고 가정할 제품 {제품코드: 품명} (기준 단위 EA)."""
+    def __init__(self, products: dict[str, str] | None = None, materials: dict[str, tuple[str, str]] | None = None) -> None:
+        """products: 이미 승인되어 있다고 가정할 제품 {코드: 품명} (기준 단위 EA). materials: {코드: (자재명, 기준 단위)}."""
         self.state = _State()
         for pid, name in (products or {}).items():
             self.state.products[pid] = (ProductInsert(pid, name, "EA", None, Decimal(0)), None)
+        for mid, (name, unit) in (materials or {}).items():
+            self.state.materials[mid] = (MaterialInsert(mid, name, unit, Decimal(0)), None)
         self.fail_insert_after: int | None = None
         self.unavailable = False
         self.rollbacks = 0

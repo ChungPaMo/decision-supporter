@@ -1,0 +1,45 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "GET",
+    "path": "/boms?active_only=true"
+  },
+  "status": 200,
+  "response": {
+    "items": [
+      {
+        "bom_id": "BOM-A",
+        "product_id": "0001001",
+        "bom_version": "V1",
+        "status": "APPROVED",
+        "is_active": true,
+        "valid_from": "2026-01-01",
+        "valid_to": "2026-12-31",
+        "base_qty": "1",
+        "source_type": "CLIENT_UPLOAD",
+        "batch_id": "00000000-0000-0000-0000-000000000003",
+        "lines": [
+          {
+            "line_no": 1,
+            "component_type": "MATERIAL",
+            "component_id": "M001",
+            "qty_per": "2.5",
+            "unit": "kg",
+            "scrap_rate": "0.05"
+          },
+          {
+            "line_no": 2,
+            "component_type": "PRODUCT",
+            "component_id": "0001002",
+            "qty_per": "1",
+            "unit": "EA",
+            "scrap_rate": "0"
+          }
+        ]
+      }
+    ],
+    "total": 1,
+    "limit": 100,
+    "offset": 0
+  }
+}

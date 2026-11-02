@@ -1,0 +1,31 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "GET",
+    "path": "/materials"
+  },
+  "status": 200,
+  "response": {
+    "items": [
+      {
+        "material_id": "M001",
+        "material_name": "합성 강판",
+        "base_unit": "kg",
+        "safety_stock_qty": "100",
+        "source_type": "CLIENT_UPLOAD",
+        "batch_id": "00000000-0000-0000-0000-000000000002"
+      },
+      {
+        "material_id": "M002",
+        "material_name": "합성 볼트",
+        "base_unit": "EA",
+        "safety_stock_qty": "0",
+        "source_type": "CLIENT_UPLOAD",
+        "batch_id": "00000000-0000-0000-0000-000000000002"
+      }
+    ],
+    "total": 2,
+    "limit": 100,
+    "offset": 0
+  }
+}

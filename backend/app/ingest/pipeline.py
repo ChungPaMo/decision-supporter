@@ -13,10 +13,12 @@ from pydantic import BaseModel
 
 from app.ingest.mapping import map_sheet
 from app.ingest.parsing import ParsedFile, parse_file
-from app.ingest.validation import MasterData, ProductRecord, Record, validate_products, validate_sheet
+from app.ingest.validation import MasterData, MaterialRecord, ProductRecord, Record, validate_materials, validate_products, validate_sheet
+from app.ingest.validation_supply import BomLineRecord, InventoryRecord, validate_bom, validate_inventory
 
-ENTITIES = ("monthly_demand", "product")
-VALIDATORS = {"monthly_demand": validate_sheet, "product": validate_products}
+ENTITIES = ("monthly_demand", "product", "material", "bom", "inventory")
+VALIDATORS = {"monthly_demand": validate_sheet, "product": validate_products, "material": validate_materials,
+              "bom": validate_bom, "inventory": validate_inventory}
 
 
 class LocationOut(BaseModel):
@@ -71,6 +73,47 @@ class ProductRecordOut(BaseModel):
     review_required: bool
 
 
+class MaterialRecordOut(BaseModel):
+    material_id: str
+    material_name: str
+    base_unit: str
+    safety_stock_qty: str
+    location: LocationOut
+    review_required: bool
+
+
+class BomLineRecordOut(BaseModel):
+    """BOM 구성품 1줄. 헤더 값은 줄마다 반복된다."""
+    bom_id: str
+    product_id: str
+    bom_version: str
+    status: str
+    is_active: bool
+    valid_from: str                  # YYYY-MM-DD
+    valid_to: str | None
+    base_qty: str
+    line_no: int
+    component_type: str
+    component_id: str
+    qty_per: str
+    unit: str
+    scrap_rate: str
+    location: LocationOut
+    review_required: bool
+
+
+class InventoryRecordOut(BaseModel):
+    item_type: str
+    item_id: str
+    as_of_date: str                  # YYYY-MM-DD
+    on_hand_qty: str
+    allocated_qty: str
+    available_qty: str               # 계산값: on_hand_qty - allocated_qty
+    unit: str
+    location: LocationOut
+    review_required: bool
+
+
 class SheetOut(BaseModel):
     name: str
     status: Literal["MAPPED", "HOLD", "IGNORED"]
@@ -83,7 +126,7 @@ class SheetOut(BaseModel):
     error_rows: int
     valid_records: int
     issues: list[IssueOut]
-    records: list[RecordOut | ProductRecordOut]      # entity 에 따라 형태가 다르다
+    records: list[RecordOut | ProductRecordOut | MaterialRecordOut | BomLineRecordOut | InventoryRecordOut]      # entity 에 따라 형태가 다르다
     issues_total: int | None = None      # 응답이 잘렸을 때 전체 건수 (issues/records 는 앞부분만 담길 수 있음)
     records_total: int | None = None
 
@@ -102,7 +145,7 @@ class PreviewOut(BaseModel):
     status: Literal["READY_FOR_APPROVAL", "HAS_ERRORS", "MAPPING_HOLD"]
     approval_required: Literal[True] = True
     auto_approve: Literal[False] = False
-    master_data_checked: bool = False     # False: 기존 제품과 대조하지 않은 결과 (저장 없는 /ingest/preview)
+    master_data_checked: bool = False     # False: 기존 제품·자재·BOM 과 대조하지 않은 결과 (저장 없는 /ingest/preview)
     blocking_error_count: int
     warning_count: int
     sheets: list[SheetOut]
@@ -112,7 +155,20 @@ def _loc(l) -> LocationOut | None:
     return None if l is None else LocationOut(sheet=l.sheet, row=l.row, col=l.col, cell_ref=l.cell_ref)
 
 
-def _record_out(r: Record | ProductRecord) -> RecordOut | ProductRecordOut:
+def _record_out(r):
+    if isinstance(r, MaterialRecord):
+        return MaterialRecordOut(material_id=r.material_id, material_name=r.material_name, base_unit=r.base_unit,
+                                 safety_stock_qty=format(r.safety_stock_qty, "f"), location=_loc(r.location), review_required=r.review_required)
+    if isinstance(r, BomLineRecord):
+        return BomLineRecordOut(bom_id=r.bom_id, product_id=r.product_id, bom_version=r.bom_version, status=r.status, is_active=r.is_active,
+                                valid_from=r.valid_from.isoformat(), valid_to=r.valid_to.isoformat() if r.valid_to else None,
+                                base_qty=format(r.base_qty, "f"), line_no=r.line_no, component_type=r.component_type, component_id=r.component_id,
+                                qty_per=format(r.qty_per, "f"), unit=r.unit, scrap_rate=format(r.scrap_rate, "f"),
+                                location=_loc(r.location), review_required=r.review_required)
+    if isinstance(r, InventoryRecord):
+        return InventoryRecordOut(item_type=r.item_type, item_id=r.item_id, as_of_date=r.as_of_date.isoformat(), on_hand_qty=format(r.on_hand_qty, "f"),
+                                  allocated_qty=format(r.allocated_qty, "f"), available_qty=format(r.available_qty, "f"), unit=r.unit,
+                                  location=_loc(r.location), review_required=r.review_required)
     if isinstance(r, ProductRecord):
         return ProductRecordOut(product_id=r.product_id, product_name=r.product_name, base_unit=r.base_unit, product_type=r.product_type,
                                 safety_stock_qty=format(r.safety_stock_qty, "f"), location=_loc(r.location), review_required=r.review_required)

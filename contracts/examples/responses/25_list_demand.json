@@ -1,0 +1,31 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "GET",
+    "path": "/demand/monthly"
+  },
+  "status": 200,
+  "response": {
+    "items": [
+      {
+        "product_id": "0001001",
+        "period": "2026-01",
+        "demand_qty": "120",
+        "unit": "EA",
+        "source_type": "CLIENT_UPLOAD",
+        "batch_id": "00000000-0000-0000-0000-000000000005"
+      },
+      {
+        "product_id": "0001002",
+        "period": "2026-01",
+        "demand_qty": "60",
+        "unit": "EA",
+        "source_type": "CLIENT_UPLOAD",
+        "batch_id": "00000000-0000-0000-0000-000000000005"
+      }
+    ],
+    "total": 2,
+    "limit": 100,
+    "offset": 0
+  }
+}

@@ -1,0 +1,4474 @@
+{
+  "components": {
+    "schemas": {
+      "ApproveRequest": {
+        "properties": {
+          "approved_by": {
+            "description": "승인자 역할 코드 (예: REVIEWER-01). 실명·공백 불가",
+            "title": "Approved By",
+            "type": "string"
+          },
+          "expected_result_digest": {
+            "description": "화면에서 확인한 배치의 result_digest",
+            "maxLength": 64,
+            "minLength": 64,
+            "title": "Expected Result Digest",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approved_by",
+          "expected_result_digest"
+        ],
+        "title": "ApproveRequest",
+        "type": "object"
+      },
+      "BatchDetail": {
+        "properties": {
+          "approval_blockers": {
+            "description": "비어 있으면 승인 요청 가능. 이미 승인된 키(수요·재고) 중복은 승인 요청 시점에 확인되어 여기에는 없다",
+            "items": {
+              "$ref": "#/components/schemas/Blocker"
+            },
+            "title": "Approval Blockers",
+            "type": "array"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "approved_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By"
+          },
+          "approved_record_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved Record Count"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "blocking_error_count": {
+            "title": "Blocking Error Count",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "entity": {
+            "enum": [
+              "monthly_demand",
+              "product",
+              "material",
+              "bom",
+              "inventory"
+            ],
+            "title": "Entity",
+            "type": "string"
+          },
+          "file": {
+            "$ref": "#/components/schemas/FileInfo"
+          },
+          "reject_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reject Reason"
+          },
+          "rejected_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejected At"
+          },
+          "rejected_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejected By"
+          },
+          "result_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "현재 검증 결과의 지문. 승인 요청의 expected_result_digest 로 되돌려 보낸다",
+            "title": "Result Digest"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/BatchSettings"
+          },
+          "source_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Note"
+          },
+          "source_type": {
+            "$ref": "#/components/schemas/SourceType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BatchStatus",
+            "description": "MAPPING_HOLD → 열 지정 필요 / HAS_ERRORS → 원본 수정 후 재업로드 / READY_FOR_APPROVAL → 승인 가능 / APPROVED, REJECTED → 최종"
+          },
+          "validation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PreviewOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "검증 결과 요약. 시트별 issues·records 는 앞부분만 담기며 전체 건수는 issues_total, records_total"
+          },
+          "version": {
+            "description": "재검증 요청 시 expected_version 으로 되돌려 보낸다 (동시 수정 방지)",
+            "title": "Version",
+            "type": "integer"
+          },
+          "warning_count": {
+            "title": "Warning Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "batch_id",
+          "entity",
+          "status",
+          "source_type",
+          "source_note",
+          "file",
+          "version",
+          "created_by",
+          "created_at",
+          "settings",
+          "blocking_error_count",
+          "warning_count",
+          "result_digest",
+          "approval_blockers",
+          "validation"
+        ],
+        "title": "BatchDetail",
+        "type": "object"
+      },
+      "BatchPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BatchSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "BatchPage",
+        "type": "object"
+      },
+      "BatchSettings": {
+        "properties": {
+          "column_overrides": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "title": "Column Overrides",
+            "type": "object"
+          },
+          "default_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Unit"
+          },
+          "sheet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sheet"
+          }
+        },
+        "title": "BatchSettings",
+        "type": "object"
+      },
+      "BatchStatus": {
+        "description": "배치 상태. 검증 결과가 곧 상태다(업로드·재검증 때마다 서버가 다시 계산). 최종 상태는 APPROVED, REJECTED.",
+        "enum": [
+          "MAPPING_HOLD",
+          "HAS_ERRORS",
+          "READY_FOR_APPROVAL",
+          "APPROVED",
+          "REJECTED"
+        ],
+        "title": "BatchStatus",
+        "type": "string"
+      },
+      "BatchSummary": {
+        "properties": {
+          "approval_blockers": {
+            "description": "비어 있으면 승인 요청 가능. 이미 승인된 키(수요·재고) 중복은 승인 요청 시점에 확인되어 여기에는 없다",
+            "items": {
+              "$ref": "#/components/schemas/Blocker"
+            },
+            "title": "Approval Blockers",
+            "type": "array"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "approved_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By"
+          },
+          "approved_record_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved Record Count"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "blocking_error_count": {
+            "title": "Blocking Error Count",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "entity": {
+            "enum": [
+              "monthly_demand",
+              "product",
+              "material",
+              "bom",
+              "inventory"
+            ],
+            "title": "Entity",
+            "type": "string"
+          },
+          "file": {
+            "$ref": "#/components/schemas/FileInfo"
+          },
+          "reject_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reject Reason"
+          },
+          "rejected_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejected At"
+          },
+          "rejected_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejected By"
+          },
+          "result_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "현재 검증 결과의 지문. 승인 요청의 expected_result_digest 로 되돌려 보낸다",
+            "title": "Result Digest"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/BatchSettings"
+          },
+          "source_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Note"
+          },
+          "source_type": {
+            "$ref": "#/components/schemas/SourceType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BatchStatus",
+            "description": "MAPPING_HOLD → 열 지정 필요 / HAS_ERRORS → 원본 수정 후 재업로드 / READY_FOR_APPROVAL → 승인 가능 / APPROVED, REJECTED → 최종"
+          },
+          "version": {
+            "description": "재검증 요청 시 expected_version 으로 되돌려 보낸다 (동시 수정 방지)",
+            "title": "Version",
+            "type": "integer"
+          },
+          "warning_count": {
+            "title": "Warning Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "batch_id",
+          "entity",
+          "status",
+          "source_type",
+          "source_note",
+          "file",
+          "version",
+          "created_by",
+          "created_at",
+          "settings",
+          "blocking_error_count",
+          "warning_count",
+          "result_digest",
+          "approval_blockers"
+        ],
+        "title": "BatchSummary",
+        "type": "object"
+      },
+      "Blocker": {
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ErrorCode"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "Blocker",
+        "type": "object"
+      },
+      "Body_create_batch_batches_post": {
+        "properties": {
+          "column_overrides": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JSON 객체. 예: {\"demand_qty\": \"C\"}",
+            "title": "Column Overrides"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "업로더 역할 코드(선택)",
+            "title": "Created By"
+          },
+          "default_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "월별 수요 파일에 단위 열이 없을 때 적용 (다른 entity 는 단위 열 필수)",
+            "title": "Default Unit"
+          },
+          "entity": {
+            "default": "monthly_demand",
+            "description": "monthly_demand | product | material | bom | inventory",
+            "title": "Entity",
+            "type": "string"
+          },
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "sheet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sheet"
+          },
+          "source_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Note"
+          },
+          "source_type": {
+            "default": "CLIENT_UPLOAD",
+            "description": "CLIENT_UPLOAD | PUBLIC_DEMAND | SYNTHETIC (후자 둘은 source_note 필수)",
+            "title": "Source Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_create_batch_batches_post",
+        "type": "object"
+      },
+      "Body_preview_ingest_preview_post": {
+        "properties": {
+          "column_overrides": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JSON. 예: {\"demand_qty\": \"C\"} — 매핑 보류를 풀 때 열 이름 또는 열 문자 지정",
+            "title": "Column Overrides"
+          },
+          "default_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "파일에 단위 열이 없을 때 적용할 단위",
+            "title": "Default Unit"
+          },
+          "entity": {
+            "default": "monthly_demand",
+            "title": "Entity",
+            "type": "string"
+          },
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "sheet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "XLSX 에서 이 시트만 처리",
+            "title": "Sheet"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_preview_ingest_preview_post",
+        "type": "object"
+      },
+      "BomItem": {
+        "properties": {
+          "base_qty": {
+            "title": "Base Qty",
+            "type": "string"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "bom_id": {
+            "title": "Bom Id",
+            "type": "string"
+          },
+          "bom_version": {
+            "title": "Bom Version",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/BomLineItem"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "source_type": {
+            "$ref": "#/components/schemas/SourceType"
+          },
+          "status": {
+            "description": "BOM 자체의 상태. 배치 승인과 별개",
+            "enum": [
+              "DRAFT",
+              "APPROVED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "valid_from": {
+            "format": "date",
+            "title": "Valid From",
+            "type": "string"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null 이면 무기한",
+            "title": "Valid To"
+          }
+        },
+        "required": [
+          "bom_id",
+          "product_id",
+          "bom_version",
+          "status",
+          "is_active",
+          "valid_from",
+          "valid_to",
+          "base_qty",
+          "source_type",
+          "batch_id",
+          "lines"
+        ],
+        "title": "BomItem",
+        "type": "object"
+      },
+      "BomLineItem": {
+        "properties": {
+          "component_id": {
+            "title": "Component Id",
+            "type": "string"
+          },
+          "component_type": {
+            "enum": [
+              "MATERIAL",
+              "PRODUCT"
+            ],
+            "title": "Component Type",
+            "type": "string"
+          },
+          "line_no": {
+            "title": "Line No",
+            "type": "integer"
+          },
+          "qty_per": {
+            "description": "base_qty 를 만드는 데 드는 구성품 수량 (10진 문자열)",
+            "title": "Qty Per",
+            "type": "string"
+          },
+          "scrap_rate": {
+            "description": "0 이상 1 미만 (10진 문자열)",
+            "title": "Scrap Rate",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "line_no",
+          "component_type",
+          "component_id",
+          "qty_per",
+          "unit",
+          "scrap_rate"
+        ],
+        "title": "BomLineItem",
+        "type": "object"
+      },
+      "BomLineRecordOut": {
+        "description": "BOM 구성품 1줄. 헤더 값은 줄마다 반복된다.",
+        "properties": {
+          "base_qty": {
+            "title": "Base Qty",
+            "type": "string"
+          },
+          "bom_id": {
+            "title": "Bom Id",
+            "type": "string"
+          },
+          "bom_version": {
+            "title": "Bom Version",
+            "type": "string"
+          },
+          "component_id": {
+            "title": "Component Id",
+            "type": "string"
+          },
+          "component_type": {
+            "title": "Component Type",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "line_no": {
+            "title": "Line No",
+            "type": "integer"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationOut"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "qty_per": {
+            "title": "Qty Per",
+            "type": "string"
+          },
+          "review_required": {
+            "title": "Review Required",
+            "type": "boolean"
+          },
+          "scrap_rate": {
+            "title": "Scrap Rate",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "valid_from": {
+            "title": "Valid From",
+            "type": "string"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To"
+          }
+        },
+        "required": [
+          "bom_id",
+          "product_id",
+          "bom_version",
+          "status",
+          "is_active",
+          "valid_from",
+          "valid_to",
+          "base_qty",
+          "line_no",
+          "component_type",
+          "component_id",
+          "qty_per",
+          "unit",
+          "scrap_rate",
+          "location",
+          "review_required"
+        ],
+        "title": "BomLineRecordOut",
+        "type": "object"
+      },
+      "BomPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BomItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "BomPage",
+        "type": "object"
+      },
+      "ConstraintResult": {
+        "additionalProperties": false,
+        "description": "제약조건 1건. 다중 CAPA 는 차원이 다른 항목을 이 배열에 나란히 넣는다.",
+        "properties": {
+          "constraint_id": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Constraint Id",
+            "type": "string"
+          },
+          "dimension": {
+            "description": "권장: QUANTITY, WORK_HOURS, EQUIPMENT_HOURS, MATERIAL, DUE_DATE, OTHER (미확정, 자유 문자열)",
+            "maxLength": 200,
+            "title": "Dimension",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 200,
+            "title": "Label",
+            "type": "string"
+          },
+          "limit_value": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Value"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "description": "YYYY-MM",
+                "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "status": {
+            "enum": [
+              "SATISFIED",
+              "VIOLATED",
+              "UNVERIFIED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "strength": {
+            "enum": [
+              "HARD",
+              "SOFT"
+            ],
+            "title": "Strength",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "used_value": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used Value"
+          }
+        },
+        "required": [
+          "constraint_id",
+          "label",
+          "dimension",
+          "strength",
+          "status"
+        ],
+        "title": "ConstraintResult",
+        "type": "object"
+      },
+      "DemandItem": {
+        "properties": {
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "demand_qty": {
+            "description": "10진 문자열",
+            "title": "Demand Qty",
+            "type": "string"
+          },
+          "period": {
+            "description": "YYYY-MM",
+            "title": "Period",
+            "type": "string"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "source_type": {
+            "$ref": "#/components/schemas/SourceType"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "period",
+          "demand_qty",
+          "unit",
+          "source_type",
+          "batch_id"
+        ],
+        "title": "DemandItem",
+        "type": "object"
+      },
+      "DemandPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DemandItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "DemandPage",
+        "type": "object"
+      },
+      "ErrorBody": {
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ErrorCode"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorBody",
+        "type": "object"
+      },
+      "ErrorCode": {
+        "enum": [
+          "REQUEST_INVALID",
+          "UNSUPPORTED_ENTITY",
+          "BAD_COLUMN_OVERRIDES",
+          "PERSISTENCE_DISABLED",
+          "DB_UNAVAILABLE",
+          "PERSISTENCE_ERROR",
+          "UNSUPPORTED_TYPE",
+          "FILE_EMPTY",
+          "FILE_TOO_LARGE",
+          "TOO_MANY_ROWS",
+          "XLSX_CORRUPT",
+          "ENCODING_UNKNOWN",
+          "DELIMITER_UNKNOWN",
+          "NO_VISIBLE_SHEET",
+          "EXPORT_TOO_LARGE",
+          "BATCH_NOT_FOUND",
+          "DUPLICATE_UPLOAD",
+          "SOURCE_NOTE_REQUIRED",
+          "VERSION_CONFLICT",
+          "BATCH_FINALIZED",
+          "ACTOR_REQUIRED",
+          "REJECT_REASON_REQUIRED",
+          "APPROVAL_BLOCKED_HOLD",
+          "APPROVAL_BLOCKED_ERRORS",
+          "EMPTY_BATCH",
+          "ALREADY_APPROVED",
+          "BATCH_REJECTED",
+          "RESULT_CHANGED",
+          "KEYS_ALREADY_APPROVED"
+        ],
+        "title": "ErrorCode",
+        "type": "string"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "Evidence": {
+        "additionalProperties": false,
+        "description": "계산 근거·데이터 출처 1건.",
+        "properties": {
+          "as_of": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "batch_id": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          },
+          "source_type": {
+            "enum": [
+              "PUBLIC_DEMAND",
+              "SYNTHETIC",
+              "CLIENT_UPLOAD"
+            ],
+            "title": "Source Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_type",
+          "name"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      },
+      "FieldMappingOut": {
+        "properties": {
+          "col": {
+            "title": "Col",
+            "type": "integer"
+          },
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "header": {
+            "title": "Header",
+            "type": "string"
+          },
+          "method": {
+            "enum": [
+              "ALIAS_STRONG",
+              "ALIAS_WEAK",
+              "USER_OVERRIDE"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "review_required": {
+            "title": "Review Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "field",
+          "col",
+          "header",
+          "method",
+          "review_required"
+        ],
+        "title": "FieldMappingOut",
+        "type": "object"
+      },
+      "FileInfo": {
+        "properties": {
+          "format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          }
+        },
+        "required": [
+          "name",
+          "sha256"
+        ],
+        "title": "FileInfo",
+        "type": "object"
+      },
+      "FileOut": {
+        "properties": {
+          "format": {
+            "title": "Format",
+            "type": "string"
+          },
+          "meta": {
+            "additionalProperties": true,
+            "title": "Meta",
+            "type": "object"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "format",
+          "size_bytes",
+          "sha256",
+          "meta"
+        ],
+        "title": "FileOut",
+        "type": "object"
+      },
+      "ForecastBasis": {
+        "additionalProperties": false,
+        "description": "수요 기준. 데이터 계약 v1 의 ForecastRow 와 같은 이름을 쓴다. 없으면 '미산출'.",
+        "properties": {
+          "p50_method": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P50 Method"
+          },
+          "quantile": {
+            "anyOf": [
+              {
+                "enum": [
+                  "P50",
+                  "P80",
+                  "P90"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantile"
+          },
+          "quantile_model_version": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantile Model Version"
+          },
+          "trained_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trained Until"
+          }
+        },
+        "title": "ForecastBasis",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Horizon": {
+        "additionalProperties": false,
+        "properties": {
+          "period_from": {
+            "description": "YYYY-MM",
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+            "title": "Period From",
+            "type": "string"
+          },
+          "period_to": {
+            "description": "YYYY-MM",
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+            "title": "Period To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "period_from",
+          "period_to"
+        ],
+        "title": "Horizon",
+        "type": "object"
+      },
+      "InventoryItem": {
+        "properties": {
+          "allocated_qty": {
+            "description": "할당재고",
+            "title": "Allocated Qty",
+            "type": "string"
+          },
+          "as_of_date": {
+            "format": "date",
+            "title": "As Of Date",
+            "type": "string"
+          },
+          "available_qty": {
+            "description": "가용재고 = 현재고 - 할당재고. 저장하지 않고 계산한다",
+            "title": "Available Qty",
+            "type": "string"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "item_id": {
+            "title": "Item Id",
+            "type": "string"
+          },
+          "item_type": {
+            "enum": [
+              "PRODUCT",
+              "MATERIAL"
+            ],
+            "title": "Item Type",
+            "type": "string"
+          },
+          "on_hand_qty": {
+            "description": "현재고",
+            "title": "On Hand Qty",
+            "type": "string"
+          },
+          "source_type": {
+            "$ref": "#/components/schemas/SourceType"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_type",
+          "item_id",
+          "as_of_date",
+          "on_hand_qty",
+          "allocated_qty",
+          "available_qty",
+          "unit",
+          "source_type",
+          "batch_id"
+        ],
+        "title": "InventoryItem",
+        "type": "object"
+      },
+      "InventoryPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InventoryItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "InventoryPage",
+        "type": "object"
+      },
+      "InventoryRecordOut": {
+        "properties": {
+          "allocated_qty": {
+            "title": "Allocated Qty",
+            "type": "string"
+          },
+          "as_of_date": {
+            "title": "As Of Date",
+            "type": "string"
+          },
+          "available_qty": {
+            "title": "Available Qty",
+            "type": "string"
+          },
+          "item_id": {
+            "title": "Item Id",
+            "type": "string"
+          },
+          "item_type": {
+            "title": "Item Type",
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationOut"
+          },
+          "on_hand_qty": {
+            "title": "On Hand Qty",
+            "type": "string"
+          },
+          "review_required": {
+            "title": "Review Required",
+            "type": "boolean"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_type",
+          "item_id",
+          "as_of_date",
+          "on_hand_qty",
+          "allocated_qty",
+          "available_qty",
+          "unit",
+          "location",
+          "review_required"
+        ],
+        "title": "InventoryRecordOut",
+        "type": "object"
+      },
+      "IssueOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "evidence": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Evidence",
+            "type": "object"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocationOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "raw_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Value"
+          },
+          "severity": {
+            "enum": [
+              "ERROR",
+              "WARNING"
+            ],
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "severity",
+          "code",
+          "message"
+        ],
+        "title": "IssueOut",
+        "type": "object"
+      },
+      "Kpi": {
+        "additionalProperties": false,
+        "description": "계획안 비교 항목. 코드와 산식은 미확정이라 고정하지 않는다.",
+        "properties": {
+          "code": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 200,
+            "title": "Label",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "code",
+          "label"
+        ],
+        "title": "Kpi",
+        "type": "object"
+      },
+      "LocationOut": {
+        "properties": {
+          "cell_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cell Ref"
+          },
+          "col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Col"
+          },
+          "row": {
+            "title": "Row",
+            "type": "integer"
+          },
+          "sheet": {
+            "title": "Sheet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sheet",
+          "row"
+        ],
+        "title": "LocationOut",
+        "type": "object"
+      },
+      "MappingHoldOut": {
+        "properties": {
+          "candidates": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "MappingHoldOut",
+        "type": "object"
+      },
+      "MaterialItem": {
+        "properties": {
+          "base_unit": {
+            "title": "Base Unit",
+            "type": "string"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "material_id": {
+            "title": "Material Id",
+            "type": "string"
+          },
+          "material_name": {
+            "title": "Material Name",
+            "type": "string"
+          },
+          "safety_stock_qty": {
+            "description": "10진 문자열",
+            "title": "Safety Stock Qty",
+            "type": "string"
+          },
+          "source_type": {
+            "$ref": "#/components/schemas/SourceType"
+          }
+        },
+        "required": [
+          "material_id",
+          "material_name",
+          "base_unit",
+          "safety_stock_qty",
+          "source_type",
+          "batch_id"
+        ],
+        "title": "MaterialItem",
+        "type": "object"
+      },
+      "MaterialLine": {
+        "additionalProperties": false,
+        "properties": {
+          "available_qty": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available Qty"
+          },
+          "material_id": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Material Id",
+            "type": "string"
+          },
+          "material_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Name"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "period": {
+            "description": "YYYY-MM",
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "required_qty": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Qty"
+          },
+          "shortage_qty": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shortage Qty"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "required": [
+          "material_id",
+          "period"
+        ],
+        "title": "MaterialLine",
+        "type": "object"
+      },
+      "MaterialPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MaterialItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "MaterialPage",
+        "type": "object"
+      },
+      "MaterialRecordOut": {
+        "properties": {
+          "base_unit": {
+            "title": "Base Unit",
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationOut"
+          },
+          "material_id": {
+            "title": "Material Id",
+            "type": "string"
+          },
+          "material_name": {
+            "title": "Material Name",
+            "type": "string"
+          },
+          "review_required": {
+            "title": "Review Required",
+            "type": "boolean"
+          },
+          "safety_stock_qty": {
+            "title": "Safety Stock Qty",
+            "type": "string"
+          }
+        },
+        "required": [
+          "material_id",
+          "material_name",
+          "base_unit",
+          "safety_stock_qty",
+          "location",
+          "review_required"
+        ],
+        "title": "MaterialRecordOut",
+        "type": "object"
+      },
+      "PlanExportRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "plan-export-0.1-draft",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "data_classification": {
+            "enum": [
+              "SYNTHETIC",
+              "PUBLIC_DEMAND",
+              "CLIENT_UPLOAD",
+              "MIXED"
+            ],
+            "title": "Data Classification",
+            "type": "string"
+          },
+          "engine": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "결과를 만든 엔진 이름·버전. 없으면 미산출",
+            "title": "Engine"
+          },
+          "evidence": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "maxItems": 1000,
+            "title": "Evidence",
+            "type": "array"
+          },
+          "export_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "파일명에 쓸 이름. 서버가 안전한 문자만 남기고 DEMO_UNVERIFIED_ 접두사를 붙인다",
+            "title": "Export Name"
+          },
+          "forecast_basis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ForecastBasis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At"
+          },
+          "horizon": {
+            "$ref": "#/components/schemas/Horizon"
+          },
+          "plans": {
+            "items": {
+              "$ref": "#/components/schemas/PlanResult"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Plans",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 200,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "contract_version",
+          "title",
+          "data_classification",
+          "horizon",
+          "plans"
+        ],
+        "title": "PlanExportRequest",
+        "type": "object"
+      },
+      "PlanResult": {
+        "additionalProperties": false,
+        "properties": {
+          "assumptions": {
+            "default": [],
+            "items": {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "constraints": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ConstraintResult"
+            },
+            "maxItems": 20000,
+            "title": "Constraints",
+            "type": "array"
+          },
+          "feasibility": {
+            "enum": [
+              "FEASIBLE",
+              "INFEASIBLE",
+              "UNVERIFIED"
+            ],
+            "title": "Feasibility",
+            "type": "string"
+          },
+          "kpis": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Kpi"
+            },
+            "maxItems": 200,
+            "title": "Kpis",
+            "type": "array"
+          },
+          "materials": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/MaterialLine"
+            },
+            "maxItems": 20000,
+            "title": "Materials",
+            "type": "array"
+          },
+          "plan_id": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "plan_type": {
+            "enum": [
+              "BASELINE",
+              "STABLE",
+              "COST_SAVING"
+            ],
+            "title": "Plan Type",
+            "type": "string"
+          },
+          "production": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ProductionLine"
+            },
+            "maxItems": 20000,
+            "title": "Production",
+            "type": "array"
+          }
+        },
+        "required": [
+          "plan_id",
+          "plan_type",
+          "feasibility"
+        ],
+        "title": "PlanResult",
+        "type": "object"
+      },
+      "PreviewOut": {
+        "properties": {
+          "approval_required": {
+            "const": true,
+            "default": true,
+            "title": "Approval Required",
+            "type": "boolean"
+          },
+          "auto_approve": {
+            "const": false,
+            "default": false,
+            "title": "Auto Approve",
+            "type": "boolean"
+          },
+          "blocking_error_count": {
+            "title": "Blocking Error Count",
+            "type": "integer"
+          },
+          "entity": {
+            "title": "Entity",
+            "type": "string"
+          },
+          "file": {
+            "$ref": "#/components/schemas/FileOut"
+          },
+          "master_data_checked": {
+            "default": false,
+            "title": "Master Data Checked",
+            "type": "boolean"
+          },
+          "sheets": {
+            "items": {
+              "$ref": "#/components/schemas/SheetOut"
+            },
+            "title": "Sheets",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "READY_FOR_APPROVAL",
+              "HAS_ERRORS",
+              "MAPPING_HOLD"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "warning_count": {
+            "title": "Warning Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "entity",
+          "file",
+          "status",
+          "blocking_error_count",
+          "warning_count",
+          "sheets"
+        ],
+        "title": "PreviewOut",
+        "type": "object"
+      },
+      "ProductItem": {
+        "properties": {
+          "base_unit": {
+            "title": "Base Unit",
+            "type": "string"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "product_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Type"
+          },
+          "safety_stock_qty": {
+            "description": "10진 문자열",
+            "title": "Safety Stock Qty",
+            "type": "string"
+          },
+          "source_type": {
+            "$ref": "#/components/schemas/SourceType"
+          }
+        },
+        "required": [
+          "product_id",
+          "product_name",
+          "base_unit",
+          "product_type",
+          "safety_stock_qty",
+          "source_type",
+          "batch_id"
+        ],
+        "title": "ProductItem",
+        "type": "object"
+      },
+      "ProductPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProductItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "ProductPage",
+        "type": "object"
+      },
+      "ProductRecordOut": {
+        "properties": {
+          "base_unit": {
+            "title": "Base Unit",
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationOut"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "product_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Type"
+          },
+          "review_required": {
+            "title": "Review Required",
+            "type": "boolean"
+          },
+          "safety_stock_qty": {
+            "title": "Safety Stock Qty",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "product_name",
+          "base_unit",
+          "product_type",
+          "safety_stock_qty",
+          "location",
+          "review_required"
+        ],
+        "title": "ProductRecordOut",
+        "type": "object"
+      },
+      "ProductionLine": {
+        "additionalProperties": false,
+        "properties": {
+          "demand_qty": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Demand Qty"
+          },
+          "ending_inventory_qty": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ending Inventory Qty"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "period": {
+            "description": "YYYY-MM",
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "planned_qty": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Qty"
+          },
+          "product_id": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Product Id",
+            "type": "string"
+          },
+          "product_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name"
+          },
+          "production_mode": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "예: INHOUSE, OUTSOURCE (미확정)",
+            "title": "Production Mode"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "required": [
+          "product_id",
+          "period"
+        ],
+        "title": "ProductionLine",
+        "type": "object"
+      },
+      "RecordOut": {
+        "properties": {
+          "demand_qty": {
+            "title": "Demand Qty",
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationOut"
+          },
+          "period": {
+            "title": "Period",
+            "type": "string"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name"
+          },
+          "review_required": {
+            "title": "Review Required",
+            "type": "boolean"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "product_name",
+          "period",
+          "demand_qty",
+          "unit",
+          "location",
+          "review_required"
+        ],
+        "title": "RecordOut",
+        "type": "object"
+      },
+      "RejectRequest": {
+        "properties": {
+          "reason": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "rejected_by": {
+            "description": "반려자 역할 코드",
+            "title": "Rejected By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rejected_by",
+          "reason"
+        ],
+        "title": "RejectRequest",
+        "type": "object"
+      },
+      "RevalidateRequest": {
+        "properties": {
+          "column_overrides": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "description": "{필드: 헤더 이름 또는 열 문자}. 설정 전체를 교체한다(병합 아님)",
+            "title": "Column Overrides",
+            "type": "object"
+          },
+          "default_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Unit"
+          },
+          "expected_version": {
+            "description": "조회한 배치의 version",
+            "minimum": 1.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "sheet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sheet"
+          }
+        },
+        "required": [
+          "expected_version"
+        ],
+        "title": "RevalidateRequest",
+        "type": "object"
+      },
+      "SheetOut": {
+        "properties": {
+          "data_rows": {
+            "title": "Data Rows",
+            "type": "integer"
+          },
+          "error_rows": {
+            "title": "Error Rows",
+            "type": "integer"
+          },
+          "header_rows": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Header Rows",
+            "type": "array"
+          },
+          "holds": {
+            "items": {
+              "$ref": "#/components/schemas/MappingHoldOut"
+            },
+            "title": "Holds",
+            "type": "array"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/IssueOut"
+            },
+            "title": "Issues",
+            "type": "array"
+          },
+          "issues_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issues Total"
+          },
+          "mapping": {
+            "items": {
+              "$ref": "#/components/schemas/FieldMappingOut"
+            },
+            "title": "Mapping",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "records": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/RecordOut"
+                },
+                {
+                  "$ref": "#/components/schemas/ProductRecordOut"
+                },
+                {
+                  "$ref": "#/components/schemas/MaterialRecordOut"
+                },
+                {
+                  "$ref": "#/components/schemas/BomLineRecordOut"
+                },
+                {
+                  "$ref": "#/components/schemas/InventoryRecordOut"
+                }
+              ]
+            },
+            "title": "Records",
+            "type": "array"
+          },
+          "records_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Records Total"
+          },
+          "status": {
+            "enum": [
+              "MAPPED",
+              "HOLD",
+              "IGNORED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "unmapped_headers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unmapped Headers",
+            "type": "array"
+          },
+          "valid_records": {
+            "title": "Valid Records",
+            "type": "integer"
+          },
+          "validated": {
+            "title": "Validated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "status",
+          "header_rows",
+          "data_rows",
+          "mapping",
+          "unmapped_headers",
+          "holds",
+          "validated",
+          "error_rows",
+          "valid_records",
+          "issues",
+          "records"
+        ],
+        "title": "SheetOut",
+        "type": "object"
+      },
+      "SourceType": {
+        "enum": [
+          "PUBLIC_DEMAND",
+          "SYNTHETIC",
+          "CLIENT_UPLOAD"
+        ],
+        "title": "SourceType",
+        "type": "string"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "충파모 과제 7 MVP",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/batches": {
+      "get": {
+        "operationId": "list_batches_batches_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/BatchStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "배치 목록 (최신순)",
+        "tags": [
+          "batches"
+        ]
+      },
+      "post": {
+        "operationId": "create_batch_batches_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_batch_batches_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "파일 업로드 → 원본 보관 + 검증 (승인 전, 업무 테이블 반영 없음)",
+        "tags": [
+          "batches"
+        ]
+      }
+    },
+    "/batches/{batch_id}": {
+      "get": {
+        "operationId": "get_batch_batches__batch_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "배치 상태·검증 결과 조회",
+        "tags": [
+          "batches"
+        ]
+      }
+    },
+    "/batches/{batch_id}/approve": {
+      "post": {
+        "operationId": "approve_batches__batch_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "명시적 승인 → 배치 entity 의 업무 테이블 반영 (한 트랜잭션)",
+        "tags": [
+          "batches"
+        ]
+      }
+    },
+    "/batches/{batch_id}/reject": {
+      "post": {
+        "operationId": "reject_batches__batch_id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "반려 (최종 상태)",
+        "tags": [
+          "batches"
+        ]
+      }
+    },
+    "/batches/{batch_id}/revalidate": {
+      "post": {
+        "operationId": "revalidate_batches__batch_id__revalidate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevalidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "열 지정·기본 단위 변경 후 재검증 (원본은 불변)",
+        "tags": [
+          "batches"
+        ]
+      }
+    },
+    "/boms": {
+      "get": {
+        "operationId": "list_boms_boms_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "product_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Product Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "bom_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bom Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "active_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Active Only",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BomPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "승인된 BOM 조회 (헤더 + 구성품 목록)",
+        "tags": [
+          "batches"
+        ]
+      }
+    },
+    "/demand/monthly": {
+      "get": {
+        "operationId": "list_monthly_demand_demand_monthly_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "product_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Product Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "period_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Period From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "period_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Period To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemandPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "승인된 월별 수요 조회 (예측 모듈 입력과 같은 원천)",
+        "tags": [
+          "batches"
+        ]
+      }
+    },
+    "/exports/plans/xlsx": {
+      "post": {
+        "operationId": "export_plan_exports_plans_xlsx_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "XLSX 파일. 파일명·시트·인쇄 머리글에 DEMO/UNVERIFIED 가 표시된다",
+            "headers": {
+              "Content-Disposition": {
+                "description": "attachment; filename=...; filename*=UTF-8''...",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Export-Status": {
+                "schema": {
+                  "enum": [
+                    "DEMO_UNVERIFIED"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "계획 결과 JSON → XLSX (DEMO/UNVERIFIED, 공식 문서 아님)",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "DB 연결이 되면 200, 안 되면 503. DB 오류 상세(접속 정보 포함 가능)는 응답에 싣지 않는다.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "서버·DB 상태 확인"
+      }
+    },
+    "/ingest/preview": {
+      "post": {
+        "operationId": "preview_ingest_preview_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_preview_ingest_preview_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "CSV/XLSX 파싱·매핑·검증 미리보기 (저장 없음)",
+        "tags": [
+          "ingest"
+        ]
+      }
+    },
+    "/inventory": {
+      "get": {
+        "operationId": "list_inventory_inventory_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "item_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "PRODUCT",
+                    "MATERIAL"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Item Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "item_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Item Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "as_of_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of Date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "승인된 제품·자재 재고 조회 (가용재고는 계산값)",
+        "tags": [
+          "batches"
+        ]
+      }
+    },
+    "/materials": {
+      "get": {
+        "operationId": "list_materials_materials_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "material_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Material Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "승인된 자재 마스터 조회 (material_id 정확히 일치, q 는 자재명 부분 일치)",
+        "tags": [
+          "batches"
+        ]
+      }
+    },
+    "/products": {
+      "get": {
+        "operationId": "list_products_products_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "product_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Product Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "승인된 제품 마스터 조회 (product_id 정확히 일치, q 는 품명 부분 일치)",
+        "tags": [
+          "batches"
+        ]
+      }
+    }
+  }
+}

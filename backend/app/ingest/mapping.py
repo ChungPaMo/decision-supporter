@@ -15,6 +15,9 @@ _PRODUCT_ID = {"strong": ["product_id", "productid", "product_code", "productcod
                "weak": ["code", "코드", "id", "제품", "품목"]}
 _PRODUCT_NAME = {"strong": ["product_name", "productname", "제품명", "품목명", "품명", "itemname"], "weak": ["name", "이름", "명칭"]}
 
+_BASE_UNIT = {"required": True, "strong": ["base_unit", "baseunit", "기준단위", "기본단위", "unit", "uom", "단위", "수량단위"], "weak": ["단위명"]}
+_SAFETY_STOCK = {"required": False, "strong": ["safety_stock_qty", "safety_stock", "safetystock", "안전재고", "안전재고량", "안전재고수량"], "weak": []}
+
 # entity 별 필드: 필수 여부, 강한 별칭(그 열 이름이면 거의 확실), 약한 별칭(흔한 일반 단어 — 매핑은 하되 검토 표시)
 ENTITY_FIELDS: dict[str, dict[str, dict]] = {
     "monthly_demand": {
@@ -31,10 +34,41 @@ ENTITY_FIELDS: dict[str, dict[str, dict]] = {
     "product": {
         "product_id": {"required": True, **_PRODUCT_ID},
         "product_name": {"required": True, **_PRODUCT_NAME},
-        "base_unit": {"required": True, "strong": ["base_unit", "baseunit", "기준단위", "기본단위", "unit", "uom", "단위", "수량단위"], "weak": ["단위명"]},
+        "base_unit": _BASE_UNIT,
         "product_type": {"required": False, "strong": ["product_type", "producttype", "제품유형", "제품구분", "품목유형", "품목구분"],
                          "weak": ["type", "유형", "구분"]},
-        "safety_stock_qty": {"required": False, "strong": ["safety_stock_qty", "safety_stock", "safetystock", "안전재고", "안전재고량", "안전재고수량"], "weak": []},
+        "safety_stock_qty": _SAFETY_STOCK,
+    },
+    "material": {
+        "material_id": {"required": True, "strong": ["material_id", "material_code", "자재코드", "원자재코드", "자재id"], "weak": ["code", "코드", "id", "자재"]},
+        "material_name": {"required": True, "strong": ["material_name", "자재명", "원자재명"], "weak": ["name", "이름", "명칭", "품명"]},
+        "base_unit": _BASE_UNIT,
+        "safety_stock_qty": _SAFETY_STOCK,
+    },
+    "bom": {
+        "bom_id": {"required": True, "strong": ["bom_id", "bom_code", "bom코드", "bom번호"], "weak": ["bom"]},
+        "product_id": {"required": True, "strong": _PRODUCT_ID["strong"] + ["상위품목코드", "모품목코드", "parent_item"], "weak": ["제품", "모품목"]},
+        "bom_version": {"required": True, "strong": ["bom_version", "version", "버전", "bom버전", "리비전", "revision"], "weak": ["개정", "rev"]},
+        "status": {"required": True, "strong": ["status", "bom_status", "bom상태", "승인상태"], "weak": ["상태"]},
+        "is_active": {"required": True, "strong": ["is_active", "active", "활성", "활성여부", "사용여부"], "weak": []},
+        "valid_from": {"required": True, "strong": ["valid_from", "유효시작일", "적용시작일"], "weak": ["시작일"]},
+        "valid_to": {"required": False, "strong": ["valid_to", "유효종료일", "적용종료일"], "weak": ["종료일"]},
+        "base_qty": {"required": False, "strong": ["base_qty", "기준수량", "기준생산량"], "weak": []},
+        "line_no": {"required": True, "strong": ["line_no", "라인번호", "행번호", "순번", "항번"], "weak": []},
+        "component_type": {"required": True, "strong": ["component_type", "구성유형", "구성품유형", "자재구분"], "weak": ["유형", "구분", "type"]},
+        "component_id": {"required": True, "strong": ["component_id", "component_code", "구성품코드", "자재코드", "material_code", "하위품목코드"], "weak": ["구성품"]},
+        "qty_per": {"required": True, "strong": ["qty_per", "소요량", "단위소요량", "구성수량"], "weak": ["수량", "qty", "quantity"]},
+        "unit": {"required": True, "strong": ["unit", "uom", "단위", "수량단위"], "weak": ["단위명"]},
+        "scrap_rate": {"required": False, "strong": ["scrap_rate", "scrap", "스크랩률", "스크랩비율", "불량률", "손실률"], "weak": []},
+    },
+    "inventory": {
+        "item_type": {"required": True, "strong": ["item_type", "품목구분", "품목유형"], "weak": ["구분", "유형", "type"]},
+        "item_id": {"required": True, "strong": ["item_id", "item_code", "품목코드", "품번", "제품코드", "자재코드", "재고코드"], "weak": ["code", "코드", "id", "품목"]},
+        "as_of_date": {"required": True, "strong": ["as_of_date", "기준일", "재고기준일", "기준일자"], "weak": ["date", "날짜", "일자"]},
+        "on_hand_qty": {"required": True, "strong": ["on_hand_qty", "on_hand", "현재고", "현재고량", "재고량", "보유재고", "보유수량"], "weak": ["재고", "stock", "qty", "수량"]},
+        "allocated_qty": {"required": False, "strong": ["allocated_qty", "allocated", "할당재고", "할당수량", "할당량", "예약재고"], "weak": []},
+        "available_qty": {"required": False, "strong": ["available_qty", "available", "가용재고", "가용수량"], "weak": []},
+        "unit": {"required": True, "strong": ["unit", "uom", "단위", "수량단위"], "weak": ["단위명"]},
     },
 }
 

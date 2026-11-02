@@ -1,0 +1,228 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "POST",
+    "path": "/batches",
+    "multipart": {
+      "file": "sample_bom.csv",
+      "entity": "bom"
+    }
+  },
+  "status": 201,
+  "response": {
+    "batch_id": "00000000-0000-0000-0000-000000000003",
+    "entity": "bom",
+    "status": "READY_FOR_APPROVAL",
+    "source_type": "CLIENT_UPLOAD",
+    "source_note": null,
+    "file": {
+      "name": "sample_bom.csv",
+      "sha256": "94296ab86c37836aec6736ac895147825d96f51ef1b65dcbe27fa91d11c7e064",
+      "size_bytes": 311,
+      "format": "csv"
+    },
+    "version": 1,
+    "created_by": null,
+    "created_at": "2026-11-02T00:00:00Z",
+    "settings": {
+      "default_unit": null,
+      "column_overrides": {},
+      "sheet": null
+    },
+    "blocking_error_count": 0,
+    "warning_count": 0,
+    "result_digest": "7a5ef9d5b515c08a4fe2a1dd4809c115e14c4fa39f7ba121d4c07a7a41bdf66a",
+    "approval_blockers": [],
+    "approved_by": null,
+    "approved_at": null,
+    "approved_record_count": null,
+    "rejected_by": null,
+    "rejected_at": null,
+    "reject_reason": null,
+    "validation": {
+      "entity": "bom",
+      "file": {
+        "name": "sample_bom.csv",
+        "format": "csv",
+        "size_bytes": 311,
+        "sha256": "94296ab86c37836aec6736ac895147825d96f51ef1b65dcbe27fa91d11c7e064",
+        "meta": {
+          "encoding": "utf-8",
+          "delimiter": ","
+        }
+      },
+      "status": "READY_FOR_APPROVAL",
+      "approval_required": true,
+      "auto_approve": false,
+      "master_data_checked": true,
+      "blocking_error_count": 0,
+      "warning_count": 0,
+      "sheets": [
+        {
+          "name": "",
+          "status": "MAPPED",
+          "header_rows": [
+            1
+          ],
+          "data_rows": 2,
+          "mapping": [
+            {
+              "field": "bom_id",
+              "col": 1,
+              "header": "BOM코드",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "product_id",
+              "col": 2,
+              "header": "제품코드",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "bom_version",
+              "col": 3,
+              "header": "버전",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "status",
+              "col": 4,
+              "header": "상태",
+              "method": "ALIAS_WEAK",
+              "review_required": true
+            },
+            {
+              "field": "is_active",
+              "col": 5,
+              "header": "활성",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "valid_from",
+              "col": 6,
+              "header": "유효시작일",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "valid_to",
+              "col": 7,
+              "header": "유효종료일",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "base_qty",
+              "col": 8,
+              "header": "기준수량",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "line_no",
+              "col": 9,
+              "header": "순번",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "component_type",
+              "col": 10,
+              "header": "구성유형",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "component_id",
+              "col": 11,
+              "header": "구성품코드",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "qty_per",
+              "col": 12,
+              "header": "소요량",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "unit",
+              "col": 13,
+              "header": "단위",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "scrap_rate",
+              "col": 14,
+              "header": "스크랩률",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            }
+          ],
+          "unmapped_headers": [],
+          "holds": [],
+          "validated": true,
+          "error_rows": 0,
+          "valid_records": 2,
+          "issues": [],
+          "records": [
+            {
+              "bom_id": "BOM-A",
+              "product_id": "0001001",
+              "bom_version": "V1",
+              "status": "APPROVED",
+              "is_active": true,
+              "valid_from": "2026-01-01",
+              "valid_to": "2026-12-31",
+              "base_qty": "1",
+              "line_no": 1,
+              "component_type": "MATERIAL",
+              "component_id": "M001",
+              "qty_per": "2.5",
+              "unit": "kg",
+              "scrap_rate": "0.05",
+              "location": {
+                "sheet": "",
+                "row": 2,
+                "col": null,
+                "cell_ref": null
+              },
+              "review_required": true
+            },
+            {
+              "bom_id": "BOM-A",
+              "product_id": "0001001",
+              "bom_version": "V1",
+              "status": "APPROVED",
+              "is_active": true,
+              "valid_from": "2026-01-01",
+              "valid_to": "2026-12-31",
+              "base_qty": "1",
+              "line_no": 2,
+              "component_type": "PRODUCT",
+              "component_id": "0001002",
+              "qty_per": "1",
+              "unit": "EA",
+              "scrap_rate": "0",
+              "location": {
+                "sheet": "",
+                "row": 3,
+                "col": null,
+                "cell_ref": null
+              },
+              "review_required": true
+            }
+          ],
+          "issues_total": 0,
+          "records_total": 2
+        }
+      ]
+    }
+  }
+}

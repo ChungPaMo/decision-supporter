@@ -1,0 +1,22 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "POST",
+    "path": "/batches/00000000-0000-0000-0000-000000000005/approve",
+    "json": {
+      "approved_by": "REVIEWER-01",
+      "expected_result_digest": "8ec6f9c708ef52c94a3ab4a97b926c2bbbffb173795b9fd46659726ab7933a9e"
+    }
+  },
+  "status": 409,
+  "response": {
+    "detail": {
+      "code": "ALREADY_APPROVED",
+      "message": "이미 승인된 배치입니다. 다시 반영하지 않습니다.",
+      "details": {
+        "approved_by": "REVIEWER-01",
+        "approved_at": "2026-11-01T00:00:05+00:00"
+      }
+    }
+  }
+}

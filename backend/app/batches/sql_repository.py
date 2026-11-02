@@ -1,5 +1,5 @@
 """PostgreSQL 저장소. ⚠ 미검증: 이 파일의 SQL 은 어떤 DB 에서도 실행해 보지 않았다 (개발 PC 에 Docker 가 없음).
-Docker 개발 PC 에서 마이그레이션 0003 까지 적용 후 tests/test_sql_repository.py 로 검증하기 전에는 동작을 보장하지 않는다.
+Docker 개발 PC 에서 마이그레이션 0004 까지 적용 후 tests/test_sql_repository.py 로 검증하기 전에는 동작을 보장하지 않는다.
 
 트랜잭션 경계: transaction() 한 번 = engine.begin() 한 번. 예외가 나가면 SQLAlchemy 가 롤백한다.
 승인 게이트의 최종 강제는 DB 트리거(migrations 0002)가 한다: 이 클래스가 규칙을 어겨도 DB 가 거부한다.
@@ -15,10 +15,10 @@ from sqlalchemy import Engine, text
 from sqlalchemy.exc import DBAPIError, IntegrityError, InterfaceError, OperationalError
 
 from app.batches.repository import (
-    ApprovedDemand, ApprovedProduct, BatchRecord, DemandRow, DuplicateBatchError, ProductInsert, RepositoryError,
-    RepositoryUnavailable, ValidationUpdate,
+    ApprovedBom, ApprovedDemand, ApprovedInventory, ApprovedMaterial, ApprovedProduct, BatchRecord, BomHeaderInsert, BomLineInsert, DemandRow,
+    DuplicateBatchError, InventoryInsert, MaterialInsert, ProductInsert, RepositoryError, RepositoryUnavailable, ValidationUpdate,
 )
-from app.ingest.validation import KnownProduct
+from app.ingest.validation import KnownBom, KnownMaterial, KnownProduct
 
 _COLS = """batch_id, entity, status, source_type, source_name, source_note, source_sha256, created_by, uploaded_at AS created_at,
   default_unit, column_overrides, sheet_filter, blocking_error_count, warning_count, result_digest, validation_result, version,
@@ -89,6 +89,95 @@ class SqlBatchTx:
     def list_known_products(self) -> list[KnownProduct]:
         rows = self.c.execute(text("SELECT product_id, product_name, base_unit, product_type, safety_stock_qty FROM product ORDER BY product_id")).all()
         return [KnownProduct(*r) for r in rows]
+
+    def list_known_materials(self) -> list[KnownMaterial]:
+        rows = self.c.execute(text("SELECT material_id, material_name, base_unit, safety_stock_qty FROM material ORDER BY material_id")).all()
+        return [KnownMaterial(*r) for r in rows]
+
+    def list_known_boms(self) -> list[KnownBom]:
+        rows = self.c.execute(text(
+            "SELECT h.bom_id, h.product_id, h.bom_version, h.is_active, h.valid_from, h.valid_to,"
+            " COALESCE(array_agg(l.component_product_id ORDER BY l.line_no) FILTER (WHERE l.component_product_id IS NOT NULL), '{}')"
+            " FROM bom_header h LEFT JOIN bom_line l ON l.bom_id = h.bom_id GROUP BY h.bom_id ORDER BY h.bom_id")).all()
+        return [KnownBom(*r[:6], tuple(r[6])) for r in rows]
+
+    def insert_materials(self, batch_id: uuid.UUID, rows: list[MaterialInsert]) -> int:
+        self.c.execute(text("INSERT INTO material (material_id, material_name, base_unit, safety_stock_qty, batch_id) VALUES (:m, :n, :u, :s, :b)"),
+                       [{"m": r.material_id, "n": r.material_name, "u": r.base_unit, "s": r.safety_stock_qty, "b": batch_id} for r in rows])
+        return len(rows)
+
+    def insert_bom(self, batch_id: uuid.UUID, headers: list[BomHeaderInsert], lines: list[BomLineInsert]) -> int:
+        self.c.execute(text("INSERT INTO bom_header (bom_id, product_id, bom_version, status, is_active, valid_from, valid_to, base_qty, batch_id)"
+                            " VALUES (:i, :p, :v, :s, :a, :f, :t, :q, :b)"),
+                       [{"i": h.bom_id, "p": h.product_id, "v": h.bom_version, "s": h.status, "a": h.is_active, "f": h.valid_from, "t": h.valid_to,
+                         "q": h.base_qty, "b": batch_id} for h in headers])
+        self.c.execute(text("INSERT INTO bom_line (bom_id, line_no, component_type, component_material_id, component_product_id, qty_per, unit, scrap_rate, batch_id)"
+                            " VALUES (:i, :n, :t, :m, :p, :q, :u, :s, :b)"),
+                       [{"i": x.bom_id, "n": x.line_no, "t": x.component_type,
+                         "m": x.component_id if x.component_type == "MATERIAL" else None, "p": x.component_id if x.component_type == "PRODUCT" else None,
+                         "q": x.qty_per, "u": x.unit, "s": x.scrap_rate, "b": batch_id} for x in lines])
+        return len(lines)
+
+    def existing_inventory_keys(self, keys):
+        rows = self.c.execute(text(
+            "SELECT i.item_type, i.item_id, i.as_of_date FROM inventory i"
+            " JOIN unnest(CAST(:ts AS text[]), CAST(:ids AS text[]), CAST(:ds AS date[])) AS k(t, id, d)"
+            " ON i.item_type = k.t AND i.item_id = k.id AND i.as_of_date = k.d ORDER BY 1, 2, 3"),
+            {"ts": [k[0] for k in keys], "ids": [k[1] for k in keys], "ds": [k[2] for k in keys]}).all()
+        return [(r[0], r[1], r[2]) for r in rows]
+
+    def insert_inventory(self, batch_id: uuid.UUID, rows: list[InventoryInsert]) -> int:
+        self.c.execute(text("INSERT INTO inventory (item_type, item_id, as_of_date, on_hand_qty, allocated_qty, unit, batch_id) VALUES (:t, :i, :d, :o, :a, :u, :b)"),
+                       [{"t": r.item_type, "i": r.item_id, "d": r.as_of_date, "o": r.on_hand_qty, "a": r.allocated_qty, "u": r.unit, "b": batch_id} for r in rows])
+        return len(rows)
+
+    def list_materials(self, material_id: str | None, q: str | None, limit: int, offset: int) -> tuple[list[ApprovedMaterial], int]:
+        conds, p = ["b.status = 'APPROVED'"], {"l": limit, "o": offset}
+        if material_id:
+            conds.append("t.material_id = :mid")
+            p["mid"] = material_id
+        if q:
+            conds.append("position(lower(:q) in lower(t.material_name)) > 0")
+            p["q"] = q
+        base = f"FROM material t JOIN import_batch b ON b.batch_id = t.batch_id WHERE {' AND '.join(conds)}"
+        total = self.c.execute(text(f"SELECT count(*) {base}"), p).scalar_one()
+        rows = self.c.execute(text("SELECT t.material_id, t.material_name, t.base_unit, t.safety_stock_qty, b.source_type, t.batch_id "
+                                   f"{base} ORDER BY t.material_id LIMIT :l OFFSET :o"), p).all()
+        return [ApprovedMaterial(*r) for r in rows], total
+
+    def list_boms(self, product_id: str | None, bom_id: str | None, active_only: bool, limit: int, offset: int) -> tuple[list[ApprovedBom], int]:
+        conds, p = ["b.status = 'APPROVED'"], {"l": limit, "o": offset}
+        if product_id:
+            conds.append("h.product_id = :pid")
+            p["pid"] = product_id
+        if bom_id:
+            conds.append("h.bom_id = :bid")
+            p["bid"] = bom_id
+        if active_only:
+            conds.append("h.is_active")
+        base = f"FROM bom_header h JOIN import_batch b ON b.batch_id = h.batch_id WHERE {' AND '.join(conds)}"
+        total = self.c.execute(text(f"SELECT count(*) {base}"), p).scalar_one()
+        rows = self.c.execute(text("SELECT h.bom_id, h.product_id, h.bom_version, h.status, h.is_active, h.valid_from, h.valid_to, h.base_qty, b.source_type, h.batch_id "
+                                   f"{base} ORDER BY h.product_id, h.bom_version LIMIT :l OFFSET :o"), p).all()
+        ids = [r[0] for r in rows]
+        lines: dict[str, list[BomLineInsert]] = {i: [] for i in ids}
+        if ids:
+            for r in self.c.execute(text("SELECT bom_id, line_no, component_type, COALESCE(component_material_id, component_product_id), qty_per, unit, scrap_rate"
+                                         " FROM bom_line WHERE bom_id = ANY(CAST(:ids AS text[])) ORDER BY bom_id, line_no"), {"ids": ids}):
+                lines[r[0]].append(BomLineInsert(*r))
+        return [ApprovedBom(BomHeaderInsert(*r[:8]), lines[r[0]], r[8], r[9]) for r in rows], total
+
+    def list_inventory(self, item_type, item_id, as_of_date, limit, offset) -> tuple[list[ApprovedInventory], int]:
+        conds, p = ["b.status = 'APPROVED'"], {"l": limit, "o": offset}
+        for sql, key, val in (("t.item_type = :it", "it", item_type), ("t.item_id = :id", "id", item_id), ("t.as_of_date = :d", "d", as_of_date)):
+            if val:
+                conds.append(sql)
+                p[key] = val
+        base = f"FROM inventory t JOIN import_batch b ON b.batch_id = t.batch_id WHERE {' AND '.join(conds)}"
+        total = self.c.execute(text(f"SELECT count(*) {base}"), p).scalar_one()
+        rows = self.c.execute(text("SELECT t.item_type, t.item_id, t.as_of_date, t.on_hand_qty, t.allocated_qty, t.unit, b.source_type, t.batch_id "
+                                   f"{base} ORDER BY t.item_type, t.item_id, t.as_of_date LIMIT :l OFFSET :o"), p).all()
+        return [ApprovedInventory(*r) for r in rows], total
 
     def insert_products(self, batch_id: uuid.UUID, rows: list[ProductInsert]) -> int:
         self.c.execute(text("INSERT INTO product (product_id, product_name, product_type, base_unit, safety_stock_qty, batch_id)"

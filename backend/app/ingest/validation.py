@@ -9,6 +9,7 @@ PoC 재사용
 from __future__ import annotations
 
 import calendar
+import datetime as dt
 import re
 import unicodedata
 from dataclasses import dataclass, field as dc_field
@@ -16,7 +17,7 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import ValidationError
 
-from app.contracts import CODE_PATTERN, MonthlyDemandRow, ProductRow, ProductType
+from app.contracts import CODE_PATTERN, MaterialRow, MonthlyDemandRow, ProductRow, ProductType
 from app.ingest.mapping import SheetMapping, field_for_header
 from app.ingest.parsing import Cell, ParsedSheet, col_letter
 
@@ -56,15 +57,38 @@ class KnownProduct:
     safety_stock_qty: Decimal = Decimal(0)
 
 
+@dataclass(frozen=True)
+class KnownMaterial:
+    """승인되어 자재 마스터에 있는 자재."""
+    material_id: str
+    material_name: str
+    base_unit: str
+    safety_stock_qty: Decimal = Decimal(0)
+
+
+@dataclass(frozen=True)
+class KnownBom:
+    """승인된 BOM 헤더 + 하위 제품 코드 (버전·기간 충돌과 순환 검사용)."""
+    bom_id: str
+    product_id: str
+    bom_version: str
+    is_active: bool
+    valid_from: dt.date
+    valid_to: dt.date | None = None
+    component_products: tuple[str, ...] = ()
+
+
 @dataclass
 class MasterData:
-    """검증에 쓰는 기준 데이터. run_preview 에 넘기지 않으면(저장 없는 /ingest/preview) 기존 제품 대조를 하지 않는다."""
+    """검증에 쓰는 기준 데이터. run_preview 에 넘기지 않으면(저장 없는 /ingest/preview) 기존 데이터 대조를 하지 않는다."""
     products: dict[str, KnownProduct] = dc_field(default_factory=dict)
+    materials: dict[str, KnownMaterial] = dc_field(default_factory=dict)
+    boms: list[KnownBom] = dc_field(default_factory=list)
 
-    def code_variants(self, code: str) -> list[str]:
+    def code_variants(self, code: str, known: dict | None = None) -> list[str]:
         """선행 0·대소문자만 다른 등록 코드 (자동으로 합치지 않고 안내만 한다)."""
         key = _variant_key(code)
-        return sorted(p for p in self.products if p != code and _variant_key(p) == key)
+        return sorted(p for p in (self.products if known is None else known) if p != code and _variant_key(p) == key)
 
 
 @dataclass
@@ -112,9 +136,19 @@ class ProductRecord:
 
 
 @dataclass
+class MaterialRecord:
+    material_id: str
+    material_name: str
+    base_unit: str
+    safety_stock_qty: Decimal
+    location: Location
+    review_required: bool = False
+
+
+@dataclass
 class SheetValidation:
     issues: list[Issue] = dc_field(default_factory=list)
-    records: list = dc_field(default_factory=list)            # Record | ProductRecord
+    records: list = dc_field(default_factory=list)            # entity 별 레코드
     data_rows: int = 0
     error_rows: int = 0
 
@@ -151,7 +185,8 @@ def parse_period(cell: Cell) -> tuple[str | None, tuple[str, str] | None]:
     return None, ("PERIOD_INVALID", f"연월 형식이 아닙니다: '{s}' (YYYY-MM, YYYY/MM, YYYYMM, YYYY년 M월 허용)")
 
 
-def parse_qty(cell: Cell) -> tuple[Decimal | None, tuple[str, str] | None]:
+def parse_qty(cell: Cell, scale: int = 4) -> tuple[Decimal | None, tuple[str, str] | None]:
+    """scale: 허용 소수 자릿수 (재고·수요 4, BOM 소요량·스크랩 6)."""
     s = (cell.value or "").strip()
     if not s:
         return None, ("QTY_MISSING", "수량이 비어 있습니다.")
@@ -163,13 +198,13 @@ def parse_qty(cell: Cell) -> tuple[Decimal | None, tuple[str, str] | None]:
         return None, ("QTY_INVALID", f"수량 변환 실패: '{s}'")
     if d < 0:
         return None, ("QTY_NEGATIVE", f"수량이 음수입니다: '{s}'")
-    if -d.as_tuple().exponent > 4 or len(d.as_tuple().digits) - max(0, -d.as_tuple().exponent) > 14:
-        return None, ("QTY_RANGE", f"수량의 자릿수가 범위를 넘습니다 (정수 14자리, 소수 4자리): '{s}'")
+    if -d.as_tuple().exponent > scale or len(d.as_tuple().digits) - max(0, -d.as_tuple().exponent) > 18 - scale:
+        return None, ("QTY_RANGE", f"수량의 자릿수가 범위를 넘습니다 (정수 {18 - scale}자리, 소수 {scale}자리): '{s}'")
     return d, None
 
 
-def restore_code(cell: Cell) -> tuple[str | None, Issue | None]:
-    """제품코드 보존. 텍스트는 그대로(앞뒤 공백만 제거). 숫자 셀은 선행 0 이 이미 사라졌을 수 있다."""
+def restore_code(cell: Cell, fld: str = "product_id", label: str = "제품코드") -> tuple[str | None, Issue | None]:
+    """코드 보존. 텍스트는 그대로(앞뒤 공백만 제거). 숫자 셀은 선행 0 이 이미 사라졌을 수 있다."""
     s = (cell.value or "").strip()
     if not s:
         return None, None
@@ -177,11 +212,11 @@ def restore_code(cell: Cell) -> tuple[str | None, Issue | None]:
         fmt = cell.number_format or ""
         if re.fullmatch(r"0+", fmt) and len(s) < len(fmt) and s.isdigit():
             return s.zfill(len(fmt)), Issue("WARNING", "CODE_RESTORED_FROM_FORMAT",
-                                           f"제품코드가 숫자 셀입니다. 표시 서식({fmt})에 맞춰 '{s.zfill(len(fmt))}' 로 복원했습니다. 확인하세요.",
-                                           "product_id", raw_value=s)
+                                           f"{label}가 숫자 셀입니다. 표시 서식({fmt})에 맞춰 '{s.zfill(len(fmt))}' 로 복원했습니다. 확인하세요.",
+                                           fld, raw_value=s)
         return s, Issue("WARNING", "CODE_NUMERIC_CELL",
-                        f"제품코드 '{s}' 가 숫자 셀입니다. 선행 0 이 이미 사라졌을 수 있습니다. 원본에서 텍스트 서식을 확인하세요.",
-                        "product_id", raw_value=s)
+                        f"{label} '{s}' 가 숫자 셀입니다. 선행 0 이 이미 사라졌을 수 있습니다. 원본에서 텍스트 서식을 확인하세요.",
+                        fld, raw_value=s)
     return s, None
 
 
@@ -199,14 +234,15 @@ def _collector(out: SheetValidation, sname: str, bad_rows: set[int]):
     return add
 
 
-def _read_code(cell: Cell, row: int, col: int, sname: str, out: SheetValidation, add) -> tuple[str | None, bool]:
-    """제품코드 셀 → (코드 | None, 검토 필요). 형식 오류는 ERROR 로 남기고 None."""
-    code, issue = restore_code(cell)
+def _read_code(cell: Cell, row: int, col: int, sname: str, out: SheetValidation, add, fld: str = "product_id",
+               label: str = "제품코드") -> tuple[str | None, bool]:
+    """코드 셀 → (코드 | None, 검토 필요). 형식 오류는 ERROR 로 남기고 None."""
+    code, issue = restore_code(cell, fld, label)
     if code is None:
-        add("ERROR", "CODE_MISSING", "제품코드가 비어 있습니다.", "product_id", row, col)
+        add("ERROR", "CODE_MISSING", f"{label}가 비어 있습니다.", fld, row, col)
         return None, False
     if not _CODE.match(code) or len(code) > 40:
-        add("ERROR", "CODE_INVALID", f"제품코드 형식 오류: '{code}' (영문·숫자로 시작, 영문·숫자·_ . - 만 허용, 40자 이하)", "product_id", row, col, code)
+        add("ERROR", "CODE_INVALID", f"{label} 형식 오류: '{code}' (영문·숫자로 시작, 영문·숫자·_ . - 만 허용, 40자 이하)", fld, row, col, code)
         return None, False
     if issue:
         out.issues.append(Issue(issue.severity, issue.code, issue.message, issue.field, Location(sname, row, col), issue.raw_value))
@@ -356,21 +392,44 @@ def _invalid_name(name: str) -> str | None:
     return None
 
 
+@dataclass(frozen=True)
+class ItemSpec:
+    """품목 마스터(제품·자재) 공통 검증의 entity 별 차이."""
+    id_field: str
+    name_field: str
+    label: str                  # 제품 | 자재
+    prefix: str                 # 오류 코드: {prefix}_ALREADY_REGISTERED, DUPLICATE_{prefix}_ID, EXISTING_{prefix}_CONFLICT
+    has_type: bool
+
+
+PRODUCT_SPEC = ItemSpec("product_id", "product_name", "제품", "PRODUCT", True)
+MATERIAL_SPEC = ItemSpec("material_id", "material_name", "자재", "MATERIAL", False)
+
+
 def validate_products(sheet: ParsedSheet, mapping: SheetMapping, default_unit: str | None = None, master: MasterData | None = None) -> SheetValidation:
-    """제품 마스터 시트 검증. 파일 안의 규칙은 항상, 기존 제품과의 대조는 master 가 있을 때만 한다."""
+    return _validate_items(sheet, mapping, default_unit, master, PRODUCT_SPEC)
+
+
+def validate_materials(sheet: ParsedSheet, mapping: SheetMapping, default_unit: str | None = None, master: MasterData | None = None) -> SheetValidation:
+    return _validate_items(sheet, mapping, default_unit, master, MATERIAL_SPEC)
+
+
+def _validate_items(sheet: ParsedSheet, mapping: SheetMapping, default_unit: str | None, master: MasterData | None, spec: ItemSpec) -> SheetValidation:
+    """품목 마스터 시트 검증. 파일 안의 규칙은 항상, 기존 품목과의 대조는 master 가 있을 때만 한다."""
     out = SheetValidation(data_rows=len(sheet.rows))
     f = mapping.fields
     sname = sheet.name
     bad_rows: set[int] = set()
     add = _collector(out, sname, bad_rows)
+    id_label = f"{spec.label}코드"
 
     if default_unit:
-        add("WARNING", "DEFAULT_UNIT_IGNORED", "제품 마스터에서는 기준 단위가 필수 열이라 default_unit 을 쓰지 않습니다.")
+        add("WARNING", "DEFAULT_UNIT_IGNORED", f"{spec.label} 마스터에서는 기준 단위가 필수 열이라 default_unit 을 쓰지 않습니다.")
     if "safety_stock_qty" not in f:
-        add("WARNING", "SAFETY_STOCK_DEFAULTED", "안전재고 열이 없어 모든 제품을 0 으로 등록합니다. 확인하세요.")
+        add("WARNING", "SAFETY_STOCK_DEFAULTED", f"안전재고 열이 없어 모든 {spec.label}을 0 으로 등록합니다. 확인하세요.")
     demand_like = [h for h in mapping.unmapped_headers if field_for_header(h, "monthly_demand") in ("period", "demand_qty")]
     if demand_like:
-        add("WARNING", "LOOKS_LIKE_OTHER_ENTITY", f"월별 수요 파일의 열이 있습니다: {demand_like}. 제품 마스터가 맞는지 확인하세요.", headers=demand_like)
+        add("WARNING", "LOOKS_LIKE_OTHER_ENTITY", f"월별 수요 파일의 열이 있습니다: {demand_like}. {spec.label} 마스터가 맞는지 확인하세요.", headers=demand_like)
 
     parsed = []     # (RawRow, code, name, unit, ptype, stock, review)
     for r in sheet.rows:
@@ -381,14 +440,14 @@ def validate_products(sheet: ParsedSheet, mapping: SheetMapping, default_unit: s
         if len(r.cells) != sheet.width:
             add("ERROR", "ROW_COLUMN_COUNT", f"열 개수가 헤더({sheet.width})와 다릅니다 ({len(r.cells)}). 구분자나 따옴표 문제일 수 있습니다.", row=r.row)
             continue
-        code, review = _read_code(cell("product_id"), r.row, f["product_id"].col, sname, out, add)
+        code, review = _read_code(cell(spec.id_field), r.row, f[spec.id_field].col, sname, out, add, spec.id_field, id_label)
 
-        name = (cell("product_name").value or "").strip() or None
-        ncol = f["product_name"].col
+        name = (cell(spec.name_field).value or "").strip() or None
+        ncol = f[spec.name_field].col
         if name is None:
-            add("ERROR", "NAME_MISSING", "제품명이 비어 있습니다.", "product_name", r.row, ncol)
+            add("ERROR", "NAME_MISSING", f"{spec.label}명이 비어 있습니다.", spec.name_field, r.row, ncol)
         elif (why := _invalid_name(name)) is not None:
-            add("ERROR", "NAME_INVALID", f"제품명이 올바르지 않습니다: {why}.", "product_name", r.row, ncol, name[:100])
+            add("ERROR", "NAME_INVALID", f"{spec.label}명이 올바르지 않습니다: {why}.", spec.name_field, r.row, ncol, name[:100])
             name = None
 
         raw_u = (cell("base_unit").value or "").strip()
@@ -402,7 +461,7 @@ def validate_products(sheet: ParsedSheet, mapping: SheetMapping, default_unit: s
                 add("ERROR", "UNIT_UNKNOWN", f"알 수 없는 단위: '{raw_u}' (허용: {', '.join(UNITS)}, 개·킬로그램·톤 등)", "base_unit", r.row, ucol, raw_u)
 
         ptype = None
-        raw_t = (cell("product_type").value or "").strip()
+        raw_t = (cell("product_type").value or "").strip() if spec.has_type else ""
         if raw_t:
             ptype = PRODUCT_TYPE_ALIASES.get(raw_t.casefold())
             if ptype is None:
@@ -418,10 +477,10 @@ def validate_products(sheet: ParsedSheet, mapping: SheetMapping, default_unit: s
             add("WARNING", "SAFETY_STOCK_DEFAULTED", "안전재고가 비어 있어 0 으로 등록합니다. 확인하세요.", "safety_stock_qty", r.row, f["safety_stock_qty"].col)
         parsed.append((r, code, name, unit, ptype, stock, review or any(m.review_required for m in f.values())))
 
-    # 제품코드↔품명 충돌·코드 변형은 월별 수요와 같은 규칙 (제품명은 이 entity 에서 필수라 항상 매핑되어 있다)
-    _check_conflicts(parsed, f, sname, add)
+    # 코드↔품명 충돌·코드 변형은 월별 수요와 같은 규칙 (이름은 이 entity 에서 필수라 항상 매핑되어 있다)
+    _check_conflicts(parsed, f, sname, add, spec.id_field, spec.name_field, spec.label)
 
-    # --- 제품코드 중복: 마스터는 제품당 한 행. 값이 같아도 첫 행을 고르지 않고 원본 수정을 요구한다 ---
+    # --- 코드 중복: 마스터는 품목당 한 행. 값이 같아도 첫 행을 고르지 않고 원본 수정을 요구한다 ---
     rows_by_code: dict[str, list[int]] = {}
     for r, code, *_ in parsed:
         if code:
@@ -429,68 +488,76 @@ def validate_products(sheet: ParsedSheet, mapping: SheetMapping, default_unit: s
     for code, rows in rows_by_code.items():
         if len(rows) > 1:
             for row in rows[:MAX_ISSUES_PER_CODE]:
-                add("ERROR", "DUPLICATE_PRODUCT_ID", f"제품코드 '{code}' 가 {len(rows)}행에 있습니다: {rows[:10]}. 제품당 한 행만 허용합니다.",
-                    "product_id", row, f["product_id"].col, code, rows=rows[:10])
+                add("ERROR", f"DUPLICATE_{spec.prefix}_ID", f"{id_label} '{code}' 가 {len(rows)}행에 있습니다: {rows[:10]}. {spec.label}당 한 행만 허용합니다.",
+                    spec.id_field, row, f[spec.id_field].col, code, rows=rows[:10])
 
     already: set[int] = set()
     if master is not None:
-        already = _check_products_against_master(parsed, f, master, add)
+        already = _check_items_against_master(parsed, f, master, add, spec)
 
-    # --- 레코드 생성 (오류 없는 행만, 이미 같은 값으로 등록된 제품은 제외, 계약 모델로 최종 확인) ---
+    # --- 레코드 생성 (오류 없는 행만, 이미 같은 값으로 등록된 품목은 제외, 계약 모델로 최종 확인) ---
     for r, code, name, unit, ptype, stock, review in parsed:
         if r.row in bad_rows or r.row in already:
             continue
         qty = stock if stock is not None else Decimal(0)
         try:
-            ProductRow(product_id=code, product_name=name, product_type=ptype, base_unit=unit, safety_stock_qty=qty)
+            if spec.has_type:
+                ProductRow(product_id=code, product_name=name, product_type=ptype, base_unit=unit, safety_stock_qty=qty)
+            else:
+                MaterialRow(material_id=code, material_name=name, base_unit=unit, safety_stock_qty=qty)
         except ValidationError as exc:
             add("ERROR", "CONTRACT_VIOLATION", f"데이터 계약 위반: {exc.errors()[0]['msg']}", row=r.row)
             continue
-        out.records.append(ProductRecord(code, name, unit, ptype, qty, Location(sname, r.row), review))
+        loc = Location(sname, r.row)
+        out.records.append(ProductRecord(code, name, unit, ptype, qty, loc, review) if spec.has_type else MaterialRecord(code, name, unit, qty, loc, review))
     out.error_rows = len(bad_rows)
     return out
 
 
-def _check_products_against_master(parsed, f, master: MasterData, add) -> set[int]:
-    """기존 제품과 대조. 값이 다르면 덮어쓰지 않고 ERROR, 모두 같으면 경고 후 등록 대상에서 제외한다(반환: 제외할 행)."""
+def _check_items_against_master(parsed, f, master: MasterData, add, spec: ItemSpec) -> set[int]:
+    """기존 품목과 대조. 값이 다르면 덮어쓰지 않고 ERROR, 모두 같으면 경고 후 등록 대상에서 제외한다(반환: 제외할 행)."""
+    known = master.products if spec.has_type else master.materials
     # 정렬: 같은 품명이 여럿이어도 결과(→ result_digest)가 조회 순서에 흔들리지 않게 한다
-    by_name = {norm_name(p.product_name): p.product_id for p in sorted(master.products.values(), key=lambda x: x.product_id, reverse=True)}
+    by_name = {norm_name(getattr(p, spec.name_field)): code for code, p in sorted(known.items(), reverse=True)}
+    id_label = f"{spec.label}코드"
     same: set[int] = set()
     for r, code, name, unit, ptype, stock, _rv in parsed:
         if not code:
             continue
-        p = master.products.get(code)
+        p = known.get(code)
+        idcol = f[spec.id_field].col
         if p is None:
             owner = by_name.get(norm_name(name)) if name else None
             if owner is not None:
-                add("ERROR", "EXISTING_NAME_CONFLICT", f"품명 '{name}' 은 이미 제품코드 '{owner}' 로 등록되어 있습니다.", "product_id", r.row, f["product_id"].col, code,
-                    existing_product_id=owner)
-            variants = master.code_variants(code)
+                add("ERROR", "EXISTING_NAME_CONFLICT", f"품명 '{name}' 은 이미 {id_label} '{owner}' 로 등록되어 있습니다.", spec.id_field, r.row, idcol, code,
+                    **{f"existing_{spec.id_field}": owner})
+            variants = master.code_variants(code, known)
             if variants:
-                add("WARNING", "CODE_VARIANT", f"선행 0·대소문자만 다른 등록 코드가 있습니다: {variants}. 같은 제품이면 코드를 맞추세요 (자동으로 합치지 않음).",
-                    "product_id", r.row, f["product_id"].col, code, similar_codes=variants)
+                add("WARNING", "CODE_VARIANT", f"선행 0·대소문자만 다른 등록 코드가 있습니다: {variants}. 같은 {spec.label}이면 코드를 맞추세요 (자동으로 합치지 않음).",
+                    spec.id_field, r.row, idcol, code, similar_codes=variants)
             continue
         diffs = []
-        if name and norm_name(name) != norm_name(p.product_name):
-            diffs.append(("product_name", name, p.product_name))
+        old_name = getattr(p, spec.name_field)
+        if name and norm_name(name) != norm_name(old_name):
+            diffs.append((spec.name_field, name, old_name))
         if unit and unit != p.base_unit:
             diffs.append(("base_unit", unit, p.base_unit))
-        if ptype and ptype != p.product_type:
+        if spec.has_type and ptype and ptype != p.product_type:
             diffs.append(("product_type", ptype, p.product_type))
         if stock is not None and stock != p.safety_stock_qty:
             diffs.append(("safety_stock_qty", format(stock, "f"), format(p.safety_stock_qty, "f")))
         for fld, new, old in diffs:
-            add("ERROR", "EXISTING_PRODUCT_CONFLICT", f"제품코드 '{code}' 는 이미 등록되어 있고 {fld} 값이 다릅니다 (등록: {old}, 파일: {new}). 덮어쓰지 않습니다.",
+            add("ERROR", f"EXISTING_{spec.prefix}_CONFLICT", f"{id_label} '{code}' 는 이미 등록되어 있고 {fld} 값이 다릅니다 (등록: {old}, 파일: {new}). 덮어쓰지 않습니다.",
                 fld, r.row, f[fld].col, new, existing=old)
         if not diffs:
-            add("WARNING", "PRODUCT_ALREADY_REGISTERED", f"제품코드 '{code}' 는 같은 값으로 이미 등록되어 있어 다시 반영하지 않습니다.", "product_id", r.row, f["product_id"].col, code)
+            add("WARNING", f"{spec.prefix}_ALREADY_REGISTERED", f"{id_label} '{code}' 는 같은 값으로 이미 등록되어 있어 다시 반영하지 않습니다.", spec.id_field, r.row, idcol, code)
             same.add(r.row)
     return same
 
 
-def _check_conflicts(parsed, f, sname, add) -> None:
-    """제품코드↔품명 충돌과 코드 표기 변형. 덮어쓰거나 한쪽을 고르지 않고 관련 행 전부에 ERROR/WARNING 을 남긴다."""
-    if "product_name" in f:
+def _check_conflicts(parsed, f, sname, add, id_field: str = "product_id", name_field: str = "product_name", label: str = "제품") -> None:
+    """코드↔품명 충돌과 코드 표기 변형. 덮어쓰거나 한쪽을 고르지 않고 관련 행 전부에 ERROR/WARNING 을 남긴다."""
+    if name_field in f:
         by_code: dict[str, dict[str, list[int]]] = {}
         by_name: dict[str, dict[str, list[int]]] = {}
         for r, code, name, *_ in parsed:
@@ -501,13 +568,13 @@ def _check_conflicts(parsed, f, sname, add) -> None:
             if len(names) > 1:
                 for rows in names.values():
                     for row in rows[:MAX_ISSUES_PER_CODE]:
-                        add("ERROR", "CODE_NAME_CONFLICT", f"제품코드 '{code}' 에 서로 다른 품명이 있습니다: {sorted(names)}", "product_name", row, f["product_name"].col,
+                        add("ERROR", "CODE_NAME_CONFLICT", f"{label}코드 '{code}' 에 서로 다른 품명이 있습니다: {sorted(names)}", name_field, row, f[name_field].col,
                             names={n: v[:10] for n, v in names.items()})
         for name, codes in by_name.items():
             if len(codes) > 1:
                 for code, rows in codes.items():
                     for row in rows[:MAX_ISSUES_PER_CODE]:
-                        add("ERROR", "NAME_CODE_CONFLICT", f"품명 '{name}' 에 서로 다른 제품코드가 있습니다: {sorted(codes)}", "product_id", row, f["product_id"].col,
+                        add("ERROR", "NAME_CODE_CONFLICT", f"품명 '{name}' 에 서로 다른 {label}코드가 있습니다: {sorted(codes)}", id_field, row, f[id_field].col,
                             codes={c: v[:10] for c, v in codes.items()})
     variants: dict[str, dict[str, list[int]]] = {}
     for r, code, *_ in parsed:
@@ -517,5 +584,5 @@ def _check_conflicts(parsed, f, sname, add) -> None:
         if len(codes) > 1:
             for code, rows in codes.items():
                 for row in rows[:MAX_ISSUES_PER_CODE]:
-                    add("WARNING", "CODE_VARIANT", f"선행 0·대소문자만 다른 제품코드가 함께 있습니다: {sorted(codes)}. 같은 제품이면 통일하세요 (자동으로 합치지 않음).",
-                        "product_id", row, f["product_id"].col, code)
+                    add("WARNING", "CODE_VARIANT", f"선행 0·대소문자만 다른 {label}코드가 함께 있습니다: {sorted(codes)}. 같은 {label}이면 통일하세요 (자동으로 합치지 않음).",
+                        id_field, row, f[id_field].col, code)

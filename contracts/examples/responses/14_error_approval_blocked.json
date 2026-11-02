@@ -1,0 +1,21 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "POST",
+    "path": "/batches/00000000-0000-0000-0000-000000000006/approve",
+    "json": {
+      "approved_by": "REVIEWER-01",
+      "expected_result_digest": "4bbaa023efd9880ab96bd9720c5daf65a2a4fd2bb1c961d64df834bdae3664a6"
+    }
+  },
+  "status": 409,
+  "response": {
+    "detail": {
+      "code": "APPROVAL_BLOCKED_ERRORS",
+      "message": "검증 오류 3건이 있습니다. 원본을 고쳐 다시 업로드하거나, 제품·자재 등록이 원인이면 등록 후 다시 검증하세요.",
+      "details": {
+        "status": "HAS_ERRORS"
+      }
+    }
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "POST",
+    "path": "/batches",
+    "multipart": {
+      "file": "sample_demand_errors.csv",
+      "entity": "monthly_demand"
+    }
+  },
+  "status": 201,
+  "response": {
+    "batch_id": "00000000-0000-0000-0000-000000000006",
+    "entity": "monthly_demand",
+    "status": "HAS_ERRORS",
+    "source_type": "CLIENT_UPLOAD",
+    "source_note": null,
+    "file": {
+      "name": "sample_demand_errors.csv",
+      "sha256": "c416b7fe9339c3cbe3ec5d589f213ab2b6cdc821eed3f32a2723976d0fc84bd1",
+      "size_bytes": 129,
+      "format": "csv"
+    },
+    "version": 1,
+    "created_by": null,
+    "created_at": "2026-11-02T00:00:00Z",
+    "settings": {
+      "default_unit": null,
+      "column_overrides": {},
+      "sheet": null
+    },
+    "blocking_error_count": 3,
+    "warning_count": 0,
+    "result_digest": "4bbaa023efd9880ab96bd9720c5daf65a2a4fd2bb1c961d64df834bdae3664a6",
+    "approval_blockers": [
+      {
+        "code": "APPROVAL_BLOCKED_ERRORS",
+        "message": "검증 오류 3건이 있습니다. 원본을 고쳐 다시 업로드하거나, 제품·자재 등록이 원인이면 등록 후 다시 검증하세요."
+      }
+    ],
+    "approved_by": null,
+    "approved_at": null,
+    "approved_record_count": null,
+    "rejected_by": null,
+    "rejected_at": null,
+    "reject_reason": null,
+    "validation": {
+      "entity": "monthly_demand",
+      "file": {
+        "name": "sample_demand_errors.csv",
+        "format": "csv",
+        "size_bytes": 129,
+        "sha256": "c416b7fe9339c3cbe3ec5d589f213ab2b6cdc821eed3f32a2723976d0fc84bd1",
+        "meta": {
+          "encoding": "utf-8",
+          "delimiter": ","
+        }
+      },
+      "status": "HAS_ERRORS",
+      "approval_required": true,
+      "auto_approve": false,
+      "master_data_checked": true,
+      "blocking_error_count": 3,
+      "warning_count": 0,
+      "sheets": [
+        {
+          "name": "",
+          "status": "MAPPED",
+          "header_rows": [
+            1
+          ],
+          "data_rows": 2,
+          "mapping": [
+            {
+              "field": "product_id",
+              "col": 1,
+              "header": "제품코드",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "product_name",
+              "col": 2,
+              "header": "제품명",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "period",
+              "col": 3,
+              "header": "기준월",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "demand_qty",
+              "col": 4,
+              "header": "수요량",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "unit",
+              "col": 5,
+              "header": "단위",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            }
+          ],
+          "unmapped_headers": [],
+          "holds": [],
+          "validated": true,
+          "error_rows": 2,
+          "valid_records": 0,
+          "issues": [
+            {
+              "severity": "ERROR",
+              "code": "PERIOD_INVALID",
+              "message": "존재하지 않는 연월입니다: '2026-13'",
+              "field": "period",
+              "location": {
+                "sheet": "",
+                "row": 2,
+                "col": 3,
+                "cell_ref": "C2"
+              },
+              "raw_value": "2026-13",
+              "evidence": {}
+            },
+            {
+              "severity": "ERROR",
+              "code": "QTY_INVALID",
+              "message": "수량 형식 오류: 'abc' (숫자만 허용, 쉼표 천 단위 가능; 지수·NaN·단위 문자 불가)",
+              "field": "demand_qty",
+              "location": {
+                "sheet": "",
+                "row": 3,
+                "col": 4,
+                "cell_ref": "D3"
+              },
+              "raw_value": "abc",
+              "evidence": {}
+            },
+            {
+              "severity": "ERROR",
+              "code": "PRODUCT_NOT_REGISTERED",
+              "message": "제품 마스터에 없는 제품코드입니다: '9999999'. 제품 마스터를 먼저 승인한 뒤 다시 검증하세요.",
+              "field": "product_id",
+              "location": {
+                "sheet": "",
+                "row": 3,
+                "col": 1,
+                "cell_ref": "A3"
+              },
+              "raw_value": "9999999",
+              "evidence": {
+                "similar_codes": []
+              }
+            }
+          ],
+          "records": [],
+          "issues_total": 3,
+          "records_total": 0
+        }
+      ]
+    }
+  }
+}

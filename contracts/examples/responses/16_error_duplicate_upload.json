@@ -1,0 +1,22 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "POST",
+    "path": "/batches",
+    "multipart": {
+      "file": "sample_products.csv",
+      "entity": "product"
+    }
+  },
+  "status": 409,
+  "response": {
+    "detail": {
+      "code": "DUPLICATE_UPLOAD",
+      "message": "같은 파일이 이미 업로드되어 있습니다.",
+      "details": {
+        "batch_id": "00000000-0000-0000-0000-000000000001",
+        "status": "APPROVED"
+      }
+    }
+  }
+}

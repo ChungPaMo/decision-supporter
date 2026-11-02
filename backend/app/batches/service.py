@@ -3,11 +3,11 @@
 승인 데이터 흐름 (한 트랜잭션):
   1) 배치 행 잠금(SELECT … FOR UPDATE)  2) 상태·승인자·결과 해시 확인
   3) 저장된 원본 바이트를 다시 파싱·검증해 해시가 같은지 재확인 (화면에서 본 결과 == 지금 승인할 결과)
-  4) (월별 수요) 키 중복 확인  5) 배치를 APPROVED 로 변경  6) 업무 행 INSERT (entity 별 테이블)
+  4) (월별 수요·재고) 키 중복 확인  5) 배치를 APPROVED 로 변경  6) 업무 행 INSERT (entity 별 테이블)
   어느 단계든 예외가 나면 트랜잭션 전체가 롤백된다 (배치는 승인 전 상태 그대로).
 
-제품 마스터 연결: 업로드·재검증·승인 때마다 승인된 제품 목록을 읽어 검증에 넘긴다. 미등록 제품은 수요 배치의 ERROR(셀 위치 포함)가 되고,
-제품 승인 후 재검증하면 풀린다. 승인 시 재검증하므로 그 사이 제품이 바뀌었으면 해시가 달라져 RESULT_CHANGED 로 멈춘다.
+기준 데이터 연결: 업로드·재검증·승인 때마다 승인된 제품·자재·BOM 을 읽어 검증에 넘긴다. 미등록 품목은 ERROR(셀 위치 포함)가 되고,
+해당 마스터 승인 후 재검증하면 풀린다. 승인 시 재검증하므로 그 사이 기준 데이터가 바뀌었으면 해시가 달라져 RESULT_CHANGED 로 멈춘다.
 """
 
 from __future__ import annotations
@@ -19,14 +19,17 @@ from contextlib import contextmanager
 from decimal import Decimal
 
 from app.batches.repository import (
-    ApprovedDemand, ApprovedProduct, BatchRecord, BatchRepository, BatchTx, DemandRow, DuplicateBatchError, ProductInsert,
-    RepositoryError, RepositoryUnavailable, ValidationUpdate,
+    ApprovedBom, ApprovedDemand, ApprovedInventory, ApprovedMaterial, ApprovedProduct, BatchRecord, BatchRepository, BatchTx,
+    BomHeaderInsert, BomLineInsert, DemandRow, DuplicateBatchError, InventoryInsert, MaterialInsert, ProductInsert, RepositoryError,
+    RepositoryUnavailable, ValidationUpdate,
 )
 from app.contracts import BatchStatus, SourceType
 from app.errors import ApiError, ErrorCode
 from app.ingest.mapping import ENTITY_FIELDS
 from app.ingest.parsing import FileError
-from app.ingest.pipeline import ENTITIES, PreviewOut, ProductRecordOut, RecordOut, result_digest, run_preview, snapshot
+from app.ingest.pipeline import (
+    ENTITIES, BomLineRecordOut, InventoryRecordOut, MaterialRecordOut, PreviewOut, ProductRecordOut, RecordOut, result_digest, run_preview, snapshot,
+)
 from app.ingest.validation import MasterData
 
 ACTOR_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.\-]{1,59}$")      # 역할 코드 (예: REVIEWER-01). 공백·한글(실명) 불가
@@ -42,7 +45,7 @@ def _check_actor(actor: str | None, what: str) -> str:
 
 def approval_blockers(b: BatchRecord) -> list[dict]:
     """지금 이 배치를 승인할 수 없는 이유 목록 (화면의 승인 버튼 비활성 사유). 비어 있으면 승인 요청 가능.
-    (제품, 월) 키 중복은 승인 요청 시점에만 확인한다."""
+    이미 승인된 키(수요의 제품·월, 재고의 품목·기준일) 중복은 승인 요청 시점에만 확인한다."""
     if b.status == BatchStatus.APPROVED.value:
         return [{"code": ErrorCode.ALREADY_APPROVED, "message": "이미 승인된 배치입니다."}]
     if b.status == BatchStatus.REJECTED.value:
@@ -50,7 +53,7 @@ def approval_blockers(b: BatchRecord) -> list[dict]:
     if b.status == BatchStatus.MAPPING_HOLD.value:
         return [{"code": ErrorCode.APPROVAL_BLOCKED_HOLD, "message": "열 매핑이 보류 상태입니다. 열을 지정해 다시 검증하세요."}]
     if b.status == BatchStatus.HAS_ERRORS.value:
-        return [{"code": ErrorCode.APPROVAL_BLOCKED_ERRORS, "message": f"검증 오류 {b.blocking_error_count}건이 있습니다. 원본을 고쳐 다시 업로드하거나, 제품 등록이 원인이면 등록 후 다시 검증하세요."}]
+        return [{"code": ErrorCode.APPROVAL_BLOCKED_ERRORS, "message": f"검증 오류 {b.blocking_error_count}건이 있습니다. 원본을 고쳐 다시 업로드하거나, 제품·자재 등록이 원인이면 등록 후 다시 검증하세요."}]
     total = sum(s.get("valid_records", 0) for s in (b.validation_result or {}).get("sheets", []) if s.get("status") == "MAPPED")
     if total == 0:
         return [{"code": ErrorCode.EMPTY_BATCH, "message": "승인할 레코드가 없습니다."}]
@@ -76,7 +79,8 @@ class BatchService:
 
     @staticmethod
     def _run(tx: BatchTx, filename, data, entity, default_unit, overrides, sheet) -> PreviewOut:
-        master = MasterData({p.product_id: p for p in tx.list_known_products()})
+        master = MasterData({p.product_id: p for p in tx.list_known_products()}, {m.material_id: m for m in tx.list_known_materials()},
+                            sorted(tx.list_known_boms(), key=lambda b: b.bom_id))
         try:
             return run_preview(filename, data, entity, default_unit, overrides or None, sheet, master)
         except FileError as exc:
@@ -143,6 +147,19 @@ class BatchService:
         with self._tx() as tx:
             return tx.list_products(product_id, q, limit, offset)
 
+    def list_materials(self, material_id: str | None, q: str | None, limit: int, offset: int) -> tuple[list[ApprovedMaterial], int]:
+        with self._tx() as tx:
+            return tx.list_materials(material_id, q, limit, offset)
+
+    def list_boms(self, product_id: str | None, bom_id: str | None, active_only: bool, limit: int, offset: int) -> tuple[list[ApprovedBom], int]:
+        with self._tx() as tx:
+            return tx.list_boms(product_id, bom_id, active_only, limit, offset)
+
+    def list_inventory(self, item_type: str | None, item_id: str | None, as_of_date: dt.date | None,
+                       limit: int, offset: int) -> tuple[list[ApprovedInventory], int]:
+        with self._tx() as tx:
+            return tx.list_inventory(item_type, item_id, as_of_date, limit, offset)
+
     # ------------------------------------------------------------ 사용자 수정 → 재검증
     def revalidate(self, batch_id: uuid.UUID, *, expected_version: int, column_overrides: dict | None,
                    default_unit: str | None, sheet: str | None) -> BatchRecord:
@@ -186,10 +203,9 @@ class BatchService:
             records = [r for s in preview.sheets if s.status == "MAPPED" for r in s.records]
             if not records:
                 raise ApiError(409, ErrorCode.EMPTY_BATCH, "승인할 레코드가 없습니다.")
-            if b.entity == "product":
-                written = self._commit_products(tx, batch_id, actor, records)
-            else:
-                written = self._commit_demand(tx, batch_id, actor, records)
+            commit = {"product": self._commit_products, "material": self._commit_materials, "bom": self._commit_bom,
+                      "inventory": self._commit_inventory, "monthly_demand": self._commit_demand}[b.entity]
+            written = commit(tx, batch_id, actor, records)
             if written != len(records):                   # 방어: 어긋나면 예외 → 전체 롤백
                 raise RepositoryError(f"expected {len(records)} rows, wrote {written}")
             return tx.get_batch(batch_id)
@@ -199,6 +215,31 @@ class BatchService:
         tx.mark_approved(batch_id, actor, len(records))
         return tx.insert_products(batch_id, [ProductInsert(r.product_id, r.product_name, r.base_unit, r.product_type, Decimal(r.safety_stock_qty))
                                              for r in records])
+
+    @staticmethod
+    def _commit_materials(tx: BatchTx, batch_id: uuid.UUID, actor: str, records: list[MaterialRecordOut]) -> int:
+        tx.mark_approved(batch_id, actor, len(records))
+        return tx.insert_materials(batch_id, [MaterialInsert(r.material_id, r.material_name, r.base_unit, Decimal(r.safety_stock_qty)) for r in records])
+
+    @staticmethod
+    def _commit_bom(tx: BatchTx, batch_id: uuid.UUID, actor: str, records: list[BomLineRecordOut]) -> int:
+        """approved_record_count 는 구성품 줄 수. 헤더는 BOM 당 1건."""
+        headers = {r.bom_id: BomHeaderInsert(r.bom_id, r.product_id, r.bom_version, r.status, r.is_active, dt.date.fromisoformat(r.valid_from),
+                                             dt.date.fromisoformat(r.valid_to) if r.valid_to else None, Decimal(r.base_qty)) for r in records}
+        lines = [BomLineInsert(r.bom_id, r.line_no, r.component_type, r.component_id, Decimal(r.qty_per), r.unit, Decimal(r.scrap_rate)) for r in records]
+        tx.mark_approved(batch_id, actor, len(records))
+        return tx.insert_bom(batch_id, list(headers.values()), lines)
+
+    @staticmethod
+    def _commit_inventory(tx: BatchTx, batch_id: uuid.UUID, actor: str, records: list[InventoryRecordOut]) -> int:
+        rows = [InventoryInsert(r.item_type, r.item_id, dt.date.fromisoformat(r.as_of_date), Decimal(r.on_hand_qty), Decimal(r.allocated_qty), r.unit)
+                for r in records]
+        clash = tx.existing_inventory_keys(sorted({(r.item_type, r.item_id, r.as_of_date) for r in rows}))
+        if clash:
+            raise ApiError(409, ErrorCode.KEYS_ALREADY_APPROVED, f"이미 승인된 (품목, 기준일)이 {len(clash)}건 있습니다. 덮어쓰기는 지원하지 않습니다.",
+                           {"keys": [{"item_type": t, "item_id": i, "as_of_date": d.isoformat()} for t, i, d in clash[:MAX_LISTED]], "total": len(clash)})
+        tx.mark_approved(batch_id, actor, len(rows))
+        return tx.insert_inventory(batch_id, rows)
 
     @staticmethod
     def _commit_demand(tx: BatchTx, batch_id: uuid.UUID, actor: str, records: list[RecordOut]) -> int:

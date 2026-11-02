@@ -1,0 +1,170 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "POST",
+    "path": "/batches/00000000-0000-0000-0000-000000000004/approve",
+    "json": {
+      "approved_by": "REVIEWER-01",
+      "expected_result_digest": "29bff0c3024be2bc0cc6f47e9292172aa0c44f78f8fb7e1c9b576df74d709c95"
+    }
+  },
+  "status": 200,
+  "response": {
+    "batch_id": "00000000-0000-0000-0000-000000000004",
+    "entity": "inventory",
+    "status": "APPROVED",
+    "source_type": "CLIENT_UPLOAD",
+    "source_note": null,
+    "file": {
+      "name": "sample_inventory.csv",
+      "sha256": "1d8554332679263c0e45f3b29ce00468c426d95d4efdf496e85e2238fa7074b7",
+      "size_bytes": 156,
+      "format": "csv"
+    },
+    "version": 2,
+    "created_by": null,
+    "created_at": "2026-11-02T00:00:00Z",
+    "settings": {
+      "default_unit": null,
+      "column_overrides": {},
+      "sheet": null
+    },
+    "blocking_error_count": 0,
+    "warning_count": 0,
+    "result_digest": "29bff0c3024be2bc0cc6f47e9292172aa0c44f78f8fb7e1c9b576df74d709c95",
+    "approval_blockers": [
+      {
+        "code": "ALREADY_APPROVED",
+        "message": "이미 승인된 배치입니다."
+      }
+    ],
+    "approved_by": "REVIEWER-01",
+    "approved_at": "2026-11-01T00:00:04Z",
+    "approved_record_count": 2,
+    "rejected_by": null,
+    "rejected_at": null,
+    "reject_reason": null,
+    "validation": {
+      "entity": "inventory",
+      "file": {
+        "name": "sample_inventory.csv",
+        "format": "csv",
+        "size_bytes": 156,
+        "sha256": "1d8554332679263c0e45f3b29ce00468c426d95d4efdf496e85e2238fa7074b7",
+        "meta": {
+          "encoding": "utf-8",
+          "delimiter": ","
+        }
+      },
+      "status": "READY_FOR_APPROVAL",
+      "approval_required": true,
+      "auto_approve": false,
+      "master_data_checked": true,
+      "blocking_error_count": 0,
+      "warning_count": 0,
+      "sheets": [
+        {
+          "name": "",
+          "status": "MAPPED",
+          "header_rows": [
+            1
+          ],
+          "data_rows": 2,
+          "mapping": [
+            {
+              "field": "item_type",
+              "col": 1,
+              "header": "품목구분",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "item_id",
+              "col": 2,
+              "header": "품목코드",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "as_of_date",
+              "col": 3,
+              "header": "기준일",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "on_hand_qty",
+              "col": 4,
+              "header": "현재고",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "allocated_qty",
+              "col": 5,
+              "header": "할당재고",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "available_qty",
+              "col": 6,
+              "header": "가용재고",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "unit",
+              "col": 7,
+              "header": "단위",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            }
+          ],
+          "unmapped_headers": [],
+          "holds": [],
+          "validated": true,
+          "error_rows": 0,
+          "valid_records": 2,
+          "issues": [],
+          "records": [
+            {
+              "item_type": "PRODUCT",
+              "item_id": "0001001",
+              "as_of_date": "2026-10-31",
+              "on_hand_qty": "10",
+              "allocated_qty": "3",
+              "available_qty": "7",
+              "unit": "EA",
+              "location": {
+                "sheet": "",
+                "row": 2,
+                "col": null,
+                "cell_ref": null
+              },
+              "review_required": false
+            },
+            {
+              "item_type": "MATERIAL",
+              "item_id": "M001",
+              "as_of_date": "2026-10-31",
+              "on_hand_qty": "500.5",
+              "allocated_qty": "0",
+              "available_qty": "500.5",
+              "unit": "kg",
+              "location": {
+                "sheet": "",
+                "row": 3,
+                "col": null,
+                "cell_ref": null
+              },
+              "review_required": false
+            }
+          ],
+          "issues_total": 0,
+          "records_total": 2
+        }
+      ]
+    }
+  }
+}

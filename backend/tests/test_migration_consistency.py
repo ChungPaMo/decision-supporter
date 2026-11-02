@@ -41,7 +41,8 @@ def test_gate_objects_are_generated(sql):
     for needle in ("trg_batch_new", "trg_batch_no_delete", "trg_source_file_append_only", "trg_batch_record_count",
                    "CREATE CONSTRAINT TRIGGER", "DEFERRABLE INITIALLY DEFERRED", "approved_at = now()", "forbid_change",
                    "trg_monthly_demand_no_delete", "v_forecast_input_monthly_demand", "uq_batch_live_entity_sha",
-                   "ALTER COLUMN product_type DROP NOT NULL", "SELECT count(*) INTO n FROM product", "entity = TG_TABLE_NAME"):
+                   "ALTER COLUMN product_type DROP NOT NULL", "SELECT count(*) INTO n FROM bom_line", "SELECT count(*) INTO n FROM inventory",
+                   "SELECT count(*) INTO n FROM material", "WHEN 'bom_line' THEN 'bom'", "trg_inventory_item_exists"):
         assert needle in sql, needle
 
 
@@ -57,4 +58,4 @@ def test_migration_chain_is_linear():
     for f in versions.glob("*.py"):
         t = f.read_text(encoding="utf-8")
         revs[re.search(r'^revision = "(\w+)"', t, re.M).group(1)] = re.search(r'^down_revision = (.+)$', t, re.M).group(1).strip('"')
-    assert revs == {"0001": "None", "0002": "0001", "0003": "0002"}
+    assert revs == {"0001": "None", "0002": "0001", "0003": "0002", "0004": "0003"}

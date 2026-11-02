@@ -1,0 +1,156 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "POST",
+    "path": "/batches/00000000-0000-0000-0000-000000000005/approve",
+    "json": {
+      "approved_by": "REVIEWER-01",
+      "expected_result_digest": "8ec6f9c708ef52c94a3ab4a97b926c2bbbffb173795b9fd46659726ab7933a9e"
+    }
+  },
+  "status": 200,
+  "response": {
+    "batch_id": "00000000-0000-0000-0000-000000000005",
+    "entity": "monthly_demand",
+    "status": "APPROVED",
+    "source_type": "CLIENT_UPLOAD",
+    "source_note": null,
+    "file": {
+      "name": "sample_demand_hold.csv",
+      "sha256": "cbad19ac2a25f07e5b2cfd3620e5c6bcf463b14c183e3c6857112f46eb05a393",
+      "size_bytes": 144,
+      "format": "csv"
+    },
+    "version": 3,
+    "created_by": null,
+    "created_at": "2026-11-02T00:00:00Z",
+    "settings": {
+      "default_unit": null,
+      "column_overrides": {
+        "demand_qty": "주문수량"
+      },
+      "sheet": null
+    },
+    "blocking_error_count": 0,
+    "warning_count": 0,
+    "result_digest": "8ec6f9c708ef52c94a3ab4a97b926c2bbbffb173795b9fd46659726ab7933a9e",
+    "approval_blockers": [
+      {
+        "code": "ALREADY_APPROVED",
+        "message": "이미 승인된 배치입니다."
+      }
+    ],
+    "approved_by": "REVIEWER-01",
+    "approved_at": "2026-11-01T00:00:05Z",
+    "approved_record_count": 2,
+    "rejected_by": null,
+    "rejected_at": null,
+    "reject_reason": null,
+    "validation": {
+      "entity": "monthly_demand",
+      "file": {
+        "name": "sample_demand_hold.csv",
+        "format": "csv",
+        "size_bytes": 144,
+        "sha256": "cbad19ac2a25f07e5b2cfd3620e5c6bcf463b14c183e3c6857112f46eb05a393",
+        "meta": {
+          "encoding": "utf-8",
+          "delimiter": ","
+        }
+      },
+      "status": "READY_FOR_APPROVAL",
+      "approval_required": true,
+      "auto_approve": false,
+      "master_data_checked": true,
+      "blocking_error_count": 0,
+      "warning_count": 0,
+      "sheets": [
+        {
+          "name": "",
+          "status": "MAPPED",
+          "header_rows": [
+            1
+          ],
+          "data_rows": 2,
+          "mapping": [
+            {
+              "field": "product_id",
+              "col": 1,
+              "header": "제품코드",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "product_name",
+              "col": 2,
+              "header": "제품명",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "period",
+              "col": 3,
+              "header": "기준월",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            },
+            {
+              "field": "demand_qty",
+              "col": 5,
+              "header": "주문수량",
+              "method": "USER_OVERRIDE",
+              "review_required": false
+            },
+            {
+              "field": "unit",
+              "col": 6,
+              "header": "단위",
+              "method": "ALIAS_STRONG",
+              "review_required": false
+            }
+          ],
+          "unmapped_headers": [
+            "수량"
+          ],
+          "holds": [],
+          "validated": true,
+          "error_rows": 0,
+          "valid_records": 2,
+          "issues": [],
+          "records": [
+            {
+              "product_id": "0001001",
+              "product_name": "합성 히터 A",
+              "period": "2026-01",
+              "demand_qty": "120",
+              "unit": "EA",
+              "location": {
+                "sheet": "",
+                "row": 2,
+                "col": null,
+                "cell_ref": null
+              },
+              "review_required": false
+            },
+            {
+              "product_id": "0001002",
+              "product_name": "합성 히터 B",
+              "period": "2026-01",
+              "demand_qty": "60",
+              "unit": "EA",
+              "location": {
+                "sheet": "",
+                "row": 3,
+                "col": null,
+                "cell_ref": null
+              },
+              "review_required": false
+            }
+          ],
+          "issues_total": 0,
+          "records_total": 2
+        }
+      ]
+    }
+  }
+}

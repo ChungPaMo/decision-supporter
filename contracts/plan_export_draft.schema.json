@@ -1,0 +1,764 @@
+{
+  "contract_version": "plan-export-0.1-draft",
+  "schema": {
+    "$defs": {
+      "ConstraintResult": {
+        "additionalProperties": false,
+        "description": "제약조건 1건. 다중 CAPA 는 차원이 다른 항목을 이 배열에 나란히 넣는다.",
+        "properties": {
+          "constraint_id": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Constraint Id",
+            "type": "string"
+          },
+          "dimension": {
+            "description": "권장: QUANTITY, WORK_HOURS, EQUIPMENT_HOURS, MATERIAL, DUE_DATE, OTHER (미확정, 자유 문자열)",
+            "maxLength": 200,
+            "title": "Dimension",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 200,
+            "title": "Label",
+            "type": "string"
+          },
+          "limit_value": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Limit Value"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Note"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "description": "YYYY-MM",
+                "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Period"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Resource Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source"
+          },
+          "status": {
+            "enum": [
+              "SATISFIED",
+              "VIOLATED",
+              "UNVERIFIED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "strength": {
+            "enum": [
+              "HARD",
+              "SOFT"
+            ],
+            "title": "Strength",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Unit"
+          },
+          "used_value": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Used Value"
+          }
+        },
+        "required": [
+          "constraint_id",
+          "label",
+          "dimension",
+          "strength",
+          "status"
+        ],
+        "title": "ConstraintResult",
+        "type": "object"
+      },
+      "Evidence": {
+        "additionalProperties": false,
+        "description": "계산 근거·데이터 출처 1건.",
+        "properties": {
+          "as_of": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "As Of"
+          },
+          "batch_id": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Batch Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "name": {
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          },
+          "source_type": {
+            "enum": [
+              "PUBLIC_DEMAND",
+              "SYNTHETIC",
+              "CLIENT_UPLOAD"
+            ],
+            "title": "Source Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_type",
+          "name"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      },
+      "ForecastBasis": {
+        "additionalProperties": false,
+        "description": "수요 기준. 데이터 계약 v1 의 ForecastRow 와 같은 이름을 쓴다. 없으면 '미산출'.",
+        "properties": {
+          "p50_method": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "P50 Method"
+          },
+          "quantile": {
+            "anyOf": [
+              {
+                "enum": [
+                  "P50",
+                  "P80",
+                  "P90"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Quantile"
+          },
+          "quantile_model_version": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Quantile Model Version"
+          },
+          "trained_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Trained Until"
+          }
+        },
+        "title": "ForecastBasis",
+        "type": "object"
+      },
+      "Horizon": {
+        "additionalProperties": false,
+        "properties": {
+          "period_from": {
+            "description": "YYYY-MM",
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+            "title": "Period From",
+            "type": "string"
+          },
+          "period_to": {
+            "description": "YYYY-MM",
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+            "title": "Period To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "period_from",
+          "period_to"
+        ],
+        "title": "Horizon",
+        "type": "object"
+      },
+      "Kpi": {
+        "additionalProperties": false,
+        "description": "계획안 비교 항목. 코드와 산식은 미확정이라 고정하지 않는다.",
+        "properties": {
+          "code": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 200,
+            "title": "Label",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Unit"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Value"
+          }
+        },
+        "required": [
+          "code",
+          "label"
+        ],
+        "title": "Kpi",
+        "type": "object"
+      },
+      "MaterialLine": {
+        "additionalProperties": false,
+        "properties": {
+          "available_qty": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Available Qty"
+          },
+          "material_id": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Material Id",
+            "type": "string"
+          },
+          "material_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Material Name"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Note"
+          },
+          "period": {
+            "description": "YYYY-MM",
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "required_qty": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Required Qty"
+          },
+          "shortage_qty": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Shortage Qty"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Unit"
+          }
+        },
+        "required": [
+          "material_id",
+          "period"
+        ],
+        "title": "MaterialLine",
+        "type": "object"
+      },
+      "PlanResult": {
+        "additionalProperties": false,
+        "properties": {
+          "assumptions": {
+            "default": [],
+            "items": {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "constraints": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/ConstraintResult"
+            },
+            "maxItems": 20000,
+            "title": "Constraints",
+            "type": "array"
+          },
+          "feasibility": {
+            "enum": [
+              "FEASIBLE",
+              "INFEASIBLE",
+              "UNVERIFIED"
+            ],
+            "title": "Feasibility",
+            "type": "string"
+          },
+          "kpis": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/Kpi"
+            },
+            "maxItems": 200,
+            "title": "Kpis",
+            "type": "array"
+          },
+          "materials": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/MaterialLine"
+            },
+            "maxItems": 20000,
+            "title": "Materials",
+            "type": "array"
+          },
+          "plan_id": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "plan_type": {
+            "enum": [
+              "BASELINE",
+              "STABLE",
+              "COST_SAVING"
+            ],
+            "title": "Plan Type",
+            "type": "string"
+          },
+          "production": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/ProductionLine"
+            },
+            "maxItems": 20000,
+            "title": "Production",
+            "type": "array"
+          }
+        },
+        "required": [
+          "plan_id",
+          "plan_type",
+          "feasibility"
+        ],
+        "title": "PlanResult",
+        "type": "object"
+      },
+      "ProductionLine": {
+        "additionalProperties": false,
+        "properties": {
+          "demand_qty": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Demand Qty"
+          },
+          "ending_inventory_qty": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Ending Inventory Qty"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Note"
+          },
+          "period": {
+            "description": "YYYY-MM",
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "planned_qty": {
+            "anyOf": [
+              {
+                "description": "10진 문자열 (예: \"1200.5\"). JSON 숫자 불가",
+                "pattern": "^-?[0-9]{1,18}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Planned Qty"
+          },
+          "product_id": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Product Id",
+            "type": "string"
+          },
+          "product_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Product Name"
+          },
+          "production_mode": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "예: INHOUSE, OUTSOURCE (미확정)",
+            "title": "Production Mode"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Unit"
+          }
+        },
+        "required": [
+          "product_id",
+          "period"
+        ],
+        "title": "ProductionLine",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "contract_version": {
+        "const": "plan-export-0.1-draft",
+        "title": "Contract Version",
+        "type": "string"
+      },
+      "data_classification": {
+        "enum": [
+          "SYNTHETIC",
+          "PUBLIC_DEMAND",
+          "CLIENT_UPLOAD",
+          "MIXED"
+        ],
+        "title": "Data Classification",
+        "type": "string"
+      },
+      "engine": {
+        "anyOf": [
+          {
+            "maxLength": 200,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "결과를 만든 엔진 이름·버전. 없으면 미산출",
+        "title": "Engine"
+      },
+      "evidence": {
+        "default": [],
+        "items": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "maxItems": 1000,
+        "title": "Evidence",
+        "type": "array"
+      },
+      "export_name": {
+        "anyOf": [
+          {
+            "maxLength": 200,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "파일명에 쓸 이름. 서버가 안전한 문자만 남기고 DEMO_UNVERIFIED_ 접두사를 붙인다",
+        "title": "Export Name"
+      },
+      "forecast_basis": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ForecastBasis"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "generated_at": {
+        "anyOf": [
+          {
+            "format": "date-time",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Generated At"
+      },
+      "horizon": {
+        "$ref": "#/$defs/Horizon"
+      },
+      "plans": {
+        "items": {
+          "$ref": "#/$defs/PlanResult"
+        },
+        "maxItems": 3,
+        "minItems": 1,
+        "title": "Plans",
+        "type": "array"
+      },
+      "title": {
+        "maxLength": 200,
+        "title": "Title",
+        "type": "string"
+      }
+    },
+    "required": [
+      "contract_version",
+      "title",
+      "data_classification",
+      "horizon",
+      "plans"
+    ],
+    "title": "PlanExportRequest",
+    "type": "object"
+  },
+  "status": "DRAFT"
+}

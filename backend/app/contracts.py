@@ -14,7 +14,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-CONTRACT_VERSION = "1.1"
+CONTRACT_VERSION = "1.2"
 
 Qty = Annotated[Decimal, Field(ge=0, allow_inf_nan=False, max_digits=18, decimal_places=4)]
 Period = Annotated[str, Field(pattern=r"^\d{4}-(0[1-9]|1[0-2])$")]   # YYYY-MM

@@ -1,0 +1,89 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "GET",
+    "path": "/batches?limit=2"
+  },
+  "status": 200,
+  "response": {
+    "items": [
+      {
+        "batch_id": "00000000-0000-0000-0000-000000000006",
+        "entity": "monthly_demand",
+        "status": "REJECTED",
+        "source_type": "CLIENT_UPLOAD",
+        "source_note": null,
+        "file": {
+          "name": "sample_demand_errors.csv",
+          "sha256": "c416b7fe9339c3cbe3ec5d589f213ab2b6cdc821eed3f32a2723976d0fc84bd1",
+          "size_bytes": 129,
+          "format": "csv"
+        },
+        "version": 2,
+        "created_by": null,
+        "created_at": "2026-11-02T00:00:00Z",
+        "settings": {
+          "default_unit": null,
+          "column_overrides": {},
+          "sheet": null
+        },
+        "blocking_error_count": 3,
+        "warning_count": 0,
+        "result_digest": "4bbaa023efd9880ab96bd9720c5daf65a2a4fd2bb1c961d64df834bdae3664a6",
+        "approval_blockers": [
+          {
+            "code": "BATCH_REJECTED",
+            "message": "반려된 배치입니다."
+          }
+        ],
+        "approved_by": null,
+        "approved_at": null,
+        "approved_record_count": null,
+        "rejected_by": "REVIEWER-01",
+        "rejected_at": "2026-11-01T00:00:06Z",
+        "reject_reason": "기준월 오류, 원본 수정 후 재업로드"
+      },
+      {
+        "batch_id": "00000000-0000-0000-0000-000000000005",
+        "entity": "monthly_demand",
+        "status": "APPROVED",
+        "source_type": "CLIENT_UPLOAD",
+        "source_note": null,
+        "file": {
+          "name": "sample_demand_hold.csv",
+          "sha256": "cbad19ac2a25f07e5b2cfd3620e5c6bcf463b14c183e3c6857112f46eb05a393",
+          "size_bytes": 144,
+          "format": "csv"
+        },
+        "version": 3,
+        "created_by": null,
+        "created_at": "2026-11-02T00:00:00Z",
+        "settings": {
+          "default_unit": null,
+          "column_overrides": {
+            "demand_qty": "주문수량"
+          },
+          "sheet": null
+        },
+        "blocking_error_count": 0,
+        "warning_count": 0,
+        "result_digest": "8ec6f9c708ef52c94a3ab4a97b926c2bbbffb173795b9fd46659726ab7933a9e",
+        "approval_blockers": [
+          {
+            "code": "ALREADY_APPROVED",
+            "message": "이미 승인된 배치입니다."
+          }
+        ],
+        "approved_by": "REVIEWER-01",
+        "approved_at": "2026-11-01T00:00:05Z",
+        "approved_record_count": 2,
+        "rejected_by": null,
+        "rejected_at": null,
+        "reject_reason": null
+      }
+    ],
+    "total": 6,
+    "limit": 2,
+    "offset": 0
+  }
+}

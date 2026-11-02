@@ -1,6 +1,6 @@
 # 데이터 계약 v1 (2026-10-30)
 
-> 상태: **초안 v1.1** — 예측 담당·업무 규칙/UX 담당 확인 전. 기계 판독본: [contracts/data_contract_v1.schema.json](../contracts/data_contract_v1.schema.json) (코드 [backend/app/contracts.py](../backend/app/contracts.py)에서 생성, 테스트가 동기화 검사). DB 구현: [backend/app/models.py](../backend/app/models.py), 마이그레이션 `0001`.
+> 상태: **초안 v1.2** — 예측 담당·업무 규칙/UX 담당 확인 전. 기계 판독본: [contracts/data_contract_v1.schema.json](../contracts/data_contract_v1.schema.json) (코드 [backend/app/contracts.py](../backend/app/contracts.py)에서 생성, 테스트가 동기화 검사). DB 구현: [backend/app/models.py](../backend/app/models.py), 마이그레이션 `0001`.
 > 책임: 데이터 처리·검증·DB·API = 백엔드/데이터 담당. 예측 필드 의미 = 예측·최적화 담당. 업무 규칙·KPI = 업무 규칙/UX 담당. 아래 ⚠는 담당자 확인이 필요한 가정이다.
 
 ## 1. 공통 규칙
@@ -29,7 +29,7 @@
 | 필드 | 타입 | 규칙 |
 |---|---|---|
 | `product_id`, `target_month`(`YYYY-MM`) | | |
-| `horizon` | int 1~36 | ⚠ "trained_until 다음 달 = 1"로 가정. 희원 모듈의 정의 확인 필요 |
+| `horizon` | int 1~36 | ⚠ "trained_until 다음 달 = 1"로 가정. 예측 모듈의 정의 확인 필요 |
 | `p50`, `p80`, `p90` | decimal ≥ 0 | **p50 ≤ p80 ≤ p90** (DB CHECK + 계약 검증) |
 | `p50_method` | string ≤60 | ⚠ 값 목록 미정(열린 문자열). 확정되면 열거형으로 |
 | `quantile_model_version` | string ≤60 | |
@@ -42,11 +42,11 @@
 | 테이블 | 키 | 핵심 필드 / 제약 |
 |---|---|---|
 | `product` | product_id | product_name, base_unit, product_type(FINISHED/SEMI_FINISHED, **선택**, 없으면 NULL — v1.1), safety_stock_qty ≥ 0 (없으면 0, 경고) |
-| `material` | material_id | material_name, base_unit, safety_stock_qty ≥ 0 |
+| `material` | material_id | material_name, base_unit, safety_stock_qty ≥ 0 (없으면 0, 경고). 제품코드와 별도 공간 (v1.2 업로드) |
 | `sales_order` | order_id | product_id, order_qty > 0, unit, order_date, due_date ≥ order_date, status(OPEN/CLOSED/CANCELLED) |
 | `bom_header` | bom_id; (product_id, bom_version) 유일 | status(DRAFT/APPROVED), is_active, valid_from/valid_to, base_qty > 0. **활성 버전은 같은 제품에서 유효기간이 겹칠 수 없음**(PostgreSQL EXCLUDE), 미승인 BOM은 활성 불가 |
 | `bom_line` | (bom_id, line_no) | component_type(MATERIAL/PRODUCT)에 따라 `component_material_id` 또는 `component_product_id` 정확히 하나, qty_per > 0, unit, scrap_rate [0,1). 계약에서는 `component_id` 한 필드이고 저장 시 두 열로 갈린다 |
-| `inventory` | (item_type, item_id, as_of_date) | on_hand_qty ≥ allocated_qty ≥ 0, unit. item_id는 조건부 참조라 FK 없이 검증 단계에서 확인 |
+| `inventory` | (item_type, item_id, as_of_date) | on_hand_qty ≥ allocated_qty ≥ 0, unit. 가용재고는 저장하지 않고 on_hand - allocated 로 계산. item_id 는 조건부 참조라 FK 대신 검증 + DB 트리거(`check_inventory_item`, v1.2)로 확인 |
 | `production_capacity` | resource_id | regular_hours_per_day, overtime_hours_per_day_max, 합 ≤ 24 (PoC E01 단위: 시간/일) |
 
 v1에서 **제외**: 라우팅(제품 1개당 소요시간), 공급사·리드타임, 비용. 라우팅이 없으면 시간 기준 능력을 수량 기준으로 환산할 수 없다(PoC E11도 같은 미정 사항) → 예측 담당·업무 규칙 담당과 환산 방식 합의 필요(⚠ 다음 계약 v1.1).
@@ -65,6 +65,8 @@ v1에서 **제외**: 라우팅(제품 1개당 소요시간), 공급사·리드�
 8. 승인 전 임시 보관: 원본 바이트(`batch_source_file`)와 설정(열 지정·기본 단위·시트)만 저장하고, 재검증·승인 때마다 원본을 다시 파싱한다. 검증 요약(`validation_result`)은 화면 표시용이며 승인에 쓰지 않는다. 승인은 사용자가 본 `result_digest` 에 바인딩된다.
 9. 제품 마스터(v1.1): `entity=product` 배치로 같은 게이트를 통과해 등록한다. `monthly_demand.product_id` 는 `product` 를 참조하므로 제품이 먼저 승인되어야 하며, 미등록 제품은 수요 검증의 `PRODUCT_NOT_REGISTERED` 오류다(제품 승인 후 재검증). 없는 제품을 자동 등록하거나 코드를 생성하지 않는다. 수요 배치는 제품 테이블에, 제품 배치는 수요 테이블에 쓸 수 없다(트리거). 기존 제품 값 변경은 v1.1 범위 밖(`EXISTING_PRODUCT_CONFLICT`).
 
+10. BOM·재고(v1.2): `entity=bom`, `inventory`, `material` 배치도 같은 게이트를 쓴다. BOM 의 `approved_record_count` 는 구성품 줄 수다. 승인 순서는 제품·자재 → BOM·재고·월별 수요. 파일 형식과 코드는 [api_contract_batches.md](api_contract_batches.md) §5~7.
+
 ## 5. 충돌·변경 처리 정책 (v1은 규칙만, 구현은 업로드 API 단계)
 
 | 상황 | 정책 |
@@ -72,7 +74,7 @@ v1에서 **제외**: 라우팅(제품 1개당 소요시간), 공급사·리드�
 | 같은 코드·다른 품명, 같은 품명·다른 코드 | 검증 ERROR(충돌). 자동 덮어쓰기 금지, 승인자가 원본 확인 후 재반입 (PoC M-24, E10 M13 교훈) |
 | 코드 한쪽만 맞고 품명이 다른 단일 근거 오기 | 규칙으로 못 잡음 → 자동 승인 기본 OFF, 모든 배치 사용자 승인 필수 |
 | 단위 불일치 | 알 수 없는 단위 ERROR, 같은 dimension 다른 단위는 환산 경고, dimension 불일치 ERROR |
-| BOM 버전 변경 | 새 `bom_version` 행으로 추가, 기존 활성 버전의 `valid_to`를 먼저 닫아야 함(겹침 EXCLUDE). 구버전 입력 덮어쓰기 금지 |
+| BOM 버전 변경 | 새 `bom_id`·`bom_version` 으로 추가. 승인된 BOM 은 수정할 수 없고 활성 기간이 겹치면 거부(`BOM_ACTIVE_OVERLAP`). ⚠ 기존 활성 버전의 `valid_to` 를 나중에 닫는 기능은 없다: 교체 예정이면 처음부터 종료일을 넣어야 한다 |
 | 동일 키 재반입(다른 파일) | v1 기본키 충돌로 거부. 갱신 시맨틱(UPDATE 승인)은 업로드 API 단계에서 정의 |
 
 ## 6. 미확정 (담당자 확인 필요)

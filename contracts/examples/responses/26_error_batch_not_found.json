@@ -1,0 +1,14 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "GET",
+    "path": "/batches/00000000-0000-0000-0000-00000000ffff"
+  },
+  "status": 404,
+  "response": {
+    "detail": {
+      "code": "BATCH_NOT_FOUND",
+      "message": "배치를 찾을 수 없습니다."
+    }
+  }
+}

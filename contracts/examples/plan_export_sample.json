@@ -1,0 +1,70 @@
+{
+  "contract_version": "plan-export-0.1-draft",
+  "title": "합성 데이터 계획안 비교 예시",
+  "export_name": "plan_compare_sample",
+  "data_classification": "SYNTHETIC",
+  "engine": "fixture (계산 엔진 아님, 손으로 작성한 합성 값)",
+  "generated_at": "2026-11-02T09:00:00+09:00",
+  "horizon": {"period_from": "2026-12", "period_to": "2027-02"},
+  "forecast_basis": {"quantile": "P80", "p50_method": null, "quantile_model_version": null, "trained_until": null},
+  "plans": [
+    {
+      "plan_id": "PLAN-A",
+      "plan_type": "BASELINE",
+      "feasibility": "UNVERIFIED",
+      "kpis": [
+        {"code": "TOTAL_PRODUCTION", "label": "총 생산량", "value": "1200", "unit": "EA"},
+        {"code": "TOTAL_COST", "label": "총 비용", "value": "45000000.50", "unit": "KRW"},
+        {"code": "SERVICE_LEVEL", "label": "납기 준수율", "value": null, "unit": "%"}
+      ],
+      "production": [
+        {"product_id": "0001001", "product_name": "합성 제품 A", "period": "2026-12", "planned_qty": "400", "unit": "EA", "demand_qty": "380.5", "production_mode": "INHOUSE", "ending_inventory_qty": "120", "note": null},
+        {"product_id": "0001001", "product_name": "합성 제품 A", "period": "2027-01", "planned_qty": "400", "unit": "EA", "demand_qty": null, "production_mode": "INHOUSE", "ending_inventory_qty": null, "note": "수요 예측 미산출"}
+      ],
+      "materials": [
+        {"material_id": "M001", "material_name": "합성 자재 강판", "period": "2026-12", "required_qty": "1000.25", "available_qty": "800", "shortage_qty": "200.25", "unit": "kg", "note": null},
+        {"material_id": "M002", "material_name": "합성 자재 볼트", "period": "2026-12", "required_qty": "800", "available_qty": null, "shortage_qty": null, "unit": "EA", "note": "재고 데이터 없음"}
+      ],
+      "constraints": [
+        {"constraint_id": "CAP-QTY-L1", "label": "라인 1 월 생산 수량", "dimension": "QUANTITY", "strength": "HARD", "status": "SATISFIED", "resource_id": "L1", "period": "2026-12", "limit_value": "500", "used_value": "400", "unit": "EA", "source": "합성 생산능력", "note": null},
+        {"constraint_id": "CAP-HRS-L1", "label": "라인 1 작업시간", "dimension": "WORK_HOURS", "strength": "HARD", "status": "SATISFIED", "resource_id": "L1", "period": "2026-12", "limit_value": "176", "used_value": "150.5", "unit": "h", "source": "합성 생산능력", "note": null},
+        {"constraint_id": "CAP-EQP-PRESS", "label": "프레스 설비 시간", "dimension": "EQUIPMENT_HOURS", "strength": "HARD", "status": "UNVERIFIED", "resource_id": "PRESS-1", "period": "2026-12", "limit_value": null, "used_value": null, "unit": "h", "source": null, "note": "설비 능력 데이터 없음"},
+        {"constraint_id": "MAT-M001", "label": "강판 조달", "dimension": "MATERIAL", "strength": "HARD", "status": "VIOLATED", "resource_id": "M001", "period": "2026-12", "limit_value": "800", "used_value": "1000.25", "unit": "kg", "source": "합성 재고", "note": "조달 조건 미확인"}
+      ],
+      "assumptions": ["합성 수치이며 실제 기업 데이터가 아니다"]
+    },
+    {
+      "plan_id": "PLAN-B",
+      "plan_type": "STABLE",
+      "feasibility": "INFEASIBLE",
+      "kpis": [
+        {"code": "TOTAL_PRODUCTION", "label": "총 생산량", "value": "1350", "unit": "EA"},
+        {"code": "TOTAL_COST", "label": "총 비용", "value": "51000000", "unit": "KRW"}
+      ],
+      "production": [
+        {"product_id": "0001001", "product_name": "합성 제품 A", "period": "2026-12", "planned_qty": "450", "unit": "EA", "demand_qty": "380.5", "production_mode": "INHOUSE", "ending_inventory_qty": "170", "note": null}
+      ],
+      "materials": [],
+      "constraints": [
+        {"constraint_id": "CAP-QTY-L1", "label": "라인 1 월 생산 수량", "dimension": "QUANTITY", "strength": "HARD", "status": "SATISFIED", "resource_id": "L1", "period": "2026-12", "limit_value": "500", "used_value": "450", "unit": "EA", "source": "합성 생산능력", "note": null}
+      ],
+      "assumptions": []
+    },
+    {
+      "plan_id": "PLAN-C",
+      "plan_type": "COST_SAVING",
+      "feasibility": "UNVERIFIED",
+      "kpis": [
+        {"code": "TOTAL_PRODUCTION", "label": "총 생산량", "value": "1100", "unit": "EA"},
+        {"code": "TOTAL_COST", "label": "총 비용", "value": null, "unit": "KRW"}
+      ],
+      "production": [],
+      "materials": [],
+      "constraints": [],
+      "assumptions": []
+    }
+  ],
+  "evidence": [
+    {"source_type": "SYNTHETIC", "name": "fixture plan_export_sample.json", "batch_id": null, "as_of": "2026-11-02", "description": "출력 형식 확인용 합성 값. 예측·계획 계산 결과가 아니다"}
+  ]
+}

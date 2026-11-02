@@ -12,6 +12,14 @@ class Settings(BaseSettings):
     # 배치 저장(업로드 보관·승인·조회) API. 기본은 꺼짐: DB 통합이 검증되기 전에는 영구 저장을 하는 척하지 않는다.
     # 'postgres' 로 켜면 SqlBatchRepository 를 쓴다 — Docker 개발 PC 에서 검증 전까지 미검증 경로.
     persistence: Literal["disabled", "postgres"] = "disabled"
+    # 쉼표로 구분한 브라우저 허용 출처 (예: http://localhost:5173). 비우면 CORS 를 켜지 않는다. '*' 는 허용하지 않는다.
+    cors_allow_origins: str = ""
+
+    def cors_origins(self) -> list[str]:
+        origins = [o.strip().rstrip("/") for o in self.cors_allow_origins.split(",") if o.strip()]
+        if "*" in origins:
+            raise ValueError("CORS_ALLOW_ORIGINS 에 '*' 는 쓸 수 없습니다. 출처를 명시하세요.")
+        return origins
 
 
 def get_settings() -> Settings:

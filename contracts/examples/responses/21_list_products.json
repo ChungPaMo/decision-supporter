@@ -1,0 +1,33 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "GET",
+    "path": "/products"
+  },
+  "status": 200,
+  "response": {
+    "items": [
+      {
+        "product_id": "0001001",
+        "product_name": "합성 히터 A",
+        "base_unit": "EA",
+        "product_type": "FINISHED",
+        "safety_stock_qty": "10",
+        "source_type": "CLIENT_UPLOAD",
+        "batch_id": "00000000-0000-0000-0000-000000000001"
+      },
+      {
+        "product_id": "0001002",
+        "product_name": "합성 히터 B",
+        "base_unit": "EA",
+        "product_type": "SEMI_FINISHED",
+        "safety_stock_qty": "0",
+        "source_type": "CLIENT_UPLOAD",
+        "batch_id": "00000000-0000-0000-0000-000000000001"
+      }
+    ],
+    "total": 2,
+    "limit": 100,
+    "offset": 0
+  }
+}

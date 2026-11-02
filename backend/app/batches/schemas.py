@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from app.batches.repository import ApprovedDemand, ApprovedProduct, BatchRecord
+from app.batches.repository import ApprovedBom, ApprovedDemand, ApprovedInventory, ApprovedMaterial, ApprovedProduct, BatchRecord
 from app.batches.service import approval_blockers
 from app.contracts import BatchStatus, SourceType
 from app.errors import ErrorCode
@@ -35,7 +35,7 @@ class BatchSettings(BaseModel):
 
 class BatchSummary(BaseModel):
     batch_id: uuid.UUID
-    entity: Literal["monthly_demand", "product"]
+    entity: Literal["monthly_demand", "product", "material", "bom", "inventory"]
     status: BatchStatus = Field(description="MAPPING_HOLD → 열 지정 필요 / HAS_ERRORS → 원본 수정 후 재업로드 / READY_FOR_APPROVAL → 승인 가능 / APPROVED, REJECTED → 최종")
     source_type: SourceType
     source_note: str | None
@@ -47,7 +47,7 @@ class BatchSummary(BaseModel):
     blocking_error_count: int
     warning_count: int
     result_digest: str | None = Field(description="현재 검증 결과의 지문. 승인 요청의 expected_result_digest 로 되돌려 보낸다")
-    approval_blockers: list[Blocker] = Field(description="비어 있으면 승인 요청 가능. (제품, 월) 키 중복은 승인 요청 시점에 확인되어 여기에는 없다")
+    approval_blockers: list[Blocker] = Field(description="비어 있으면 승인 요청 가능. 이미 승인된 키(수요·재고) 중복은 승인 요청 시점에 확인되어 여기에는 없다")
     approved_by: str | None = None
     approved_at: dt.datetime | None = None
     approved_record_count: int | None = None
@@ -117,6 +117,71 @@ class ProductPage(BaseModel):
     offset: int
 
 
+class MaterialItem(BaseModel):
+    material_id: str
+    material_name: str
+    base_unit: str
+    safety_stock_qty: str = Field(description="10진 문자열")
+    source_type: SourceType
+    batch_id: uuid.UUID
+
+
+class MaterialPage(BaseModel):
+    items: list[MaterialItem]
+    total: int
+    limit: int
+    offset: int
+
+
+class BomLineItem(BaseModel):
+    line_no: int
+    component_type: Literal["MATERIAL", "PRODUCT"]
+    component_id: str
+    qty_per: str = Field(description="base_qty 를 만드는 데 드는 구성품 수량 (10진 문자열)")
+    unit: str
+    scrap_rate: str = Field(description="0 이상 1 미만 (10진 문자열)")
+
+
+class BomItem(BaseModel):
+    bom_id: str
+    product_id: str
+    bom_version: str
+    status: Literal["DRAFT", "APPROVED"] = Field(description="BOM 자체의 상태. 배치 승인과 별개")
+    is_active: bool
+    valid_from: dt.date
+    valid_to: dt.date | None = Field(description="null 이면 무기한")
+    base_qty: str
+    source_type: SourceType
+    batch_id: uuid.UUID
+    lines: list[BomLineItem]
+
+
+class BomPage(BaseModel):
+    items: list[BomItem]
+    total: int
+    limit: int
+    offset: int
+
+
+class InventoryItem(BaseModel):
+    item_type: Literal["PRODUCT", "MATERIAL"]
+    item_id: str
+    as_of_date: dt.date
+    on_hand_qty: str = Field(description="현재고")
+    allocated_qty: str = Field(description="할당재고")
+    available_qty: str = Field(description="가용재고 = 현재고 - 할당재고. 저장하지 않고 계산한다")
+    unit: str
+    source_type: SourceType
+    batch_id: uuid.UUID
+
+
+class InventoryPage(BaseModel):
+    items: list[InventoryItem]
+    total: int
+    limit: int
+    offset: int
+
+
 def to_summary(b: BatchRecord) -> BatchSummary:
     f = (b.validation_result or {}).get("file", {})
     return BatchSummary(
@@ -138,6 +203,25 @@ def to_detail(b: BatchRecord) -> BatchDetail:
 def to_product_item(p: ApprovedProduct) -> ProductItem:
     return ProductItem(product_id=p.product_id, product_name=p.product_name, base_unit=p.base_unit, product_type=p.product_type,
                        safety_stock_qty=format(p.safety_stock_qty, "f"), source_type=p.source_type, batch_id=p.batch_id)
+
+
+def to_material_item(m: ApprovedMaterial) -> MaterialItem:
+    return MaterialItem(material_id=m.material_id, material_name=m.material_name, base_unit=m.base_unit,
+                        safety_stock_qty=format(m.safety_stock_qty, "f"), source_type=m.source_type, batch_id=m.batch_id)
+
+
+def to_bom_item(b: ApprovedBom) -> BomItem:
+    h = b.header
+    return BomItem(bom_id=h.bom_id, product_id=h.product_id, bom_version=h.bom_version, status=h.status, is_active=h.is_active, valid_from=h.valid_from,
+                   valid_to=h.valid_to, base_qty=format(h.base_qty, "f"), source_type=b.source_type, batch_id=b.batch_id,
+                   lines=[BomLineItem(line_no=x.line_no, component_type=x.component_type, component_id=x.component_id, qty_per=format(x.qty_per, "f"),
+                                      unit=x.unit, scrap_rate=format(x.scrap_rate, "f")) for x in b.lines])
+
+
+def to_inventory_item(i: ApprovedInventory) -> InventoryItem:
+    return InventoryItem(item_type=i.item_type, item_id=i.item_id, as_of_date=i.as_of_date, on_hand_qty=format(i.on_hand_qty, "f"),
+                         allocated_qty=format(i.allocated_qty, "f"), available_qty=format(i.on_hand_qty - i.allocated_qty, "f"), unit=i.unit,
+                         source_type=i.source_type, batch_id=i.batch_id)
 
 
 def to_demand_item(d: ApprovedDemand) -> DemandItem:
