@@ -11,21 +11,31 @@ from dataclasses import dataclass, field as dc_field
 
 from app.ingest.parsing import ParsedSheet, col_letter
 
-# 필수 여부, 강한 별칭(그 열 이름이면 거의 확실), 약한 별칭(흔한 일반 단어 — 매핑은 하되 검토 표시)
-FIELDS: dict[str, dict] = {
-    "product_id": {"required": True,
-                   "strong": ["product_id", "productid", "product_code", "productcode", "제품코드", "품목코드", "제품id", "품번", "itemcode", "item_code", "sku"],
-                   "weak": ["code", "코드", "id", "제품", "품목"]},
-    "product_name": {"required": False,
-                     "strong": ["product_name", "productname", "제품명", "품목명", "품명", "itemname"],
-                     "weak": ["name", "이름", "명칭"]},
-    "period": {"required": True,
-               "strong": ["period", "yyyymm", "년월", "수요월", "기준월", "주문월", "target_month", "기간"],
-               "weak": ["month", "월", "date", "날짜", "일자"]},
-    "demand_qty": {"required": True,
-                   "strong": ["demand_qty", "demandqty", "수요량", "월수요량", "월별수요량", "monthly_demand"],
-                   "weak": ["demand", "수요", "qty", "quantity", "수량", "주문수량", "판매량", "출고량"]},
-    "unit": {"required": False, "strong": ["unit", "uom", "단위", "수량단위"], "weak": ["단위명"]},
+_PRODUCT_ID = {"strong": ["product_id", "productid", "product_code", "productcode", "제품코드", "품목코드", "제품id", "품번", "itemcode", "item_code", "sku"],
+               "weak": ["code", "코드", "id", "제품", "품목"]}
+_PRODUCT_NAME = {"strong": ["product_name", "productname", "제품명", "품목명", "품명", "itemname"], "weak": ["name", "이름", "명칭"]}
+
+# entity 별 필드: 필수 여부, 강한 별칭(그 열 이름이면 거의 확실), 약한 별칭(흔한 일반 단어 — 매핑은 하되 검토 표시)
+ENTITY_FIELDS: dict[str, dict[str, dict]] = {
+    "monthly_demand": {
+        "product_id": {"required": True, **_PRODUCT_ID},
+        "product_name": {"required": False, **_PRODUCT_NAME},
+        "period": {"required": True,
+                   "strong": ["period", "yyyymm", "년월", "수요월", "기준월", "주문월", "target_month", "기간"],
+                   "weak": ["month", "월", "date", "날짜", "일자"]},
+        "demand_qty": {"required": True,
+                       "strong": ["demand_qty", "demandqty", "수요량", "월수요량", "월별수요량", "monthly_demand"],
+                       "weak": ["demand", "수요", "qty", "quantity", "수량", "주문수량", "판매량", "출고량"]},
+        "unit": {"required": False, "strong": ["unit", "uom", "단위", "수량단위"], "weak": ["단위명"]},
+    },
+    "product": {
+        "product_id": {"required": True, **_PRODUCT_ID},
+        "product_name": {"required": True, **_PRODUCT_NAME},
+        "base_unit": {"required": True, "strong": ["base_unit", "baseunit", "기준단위", "기본단위", "unit", "uom", "단위", "수량단위"], "weak": ["단위명"]},
+        "product_type": {"required": False, "strong": ["product_type", "producttype", "제품유형", "제품구분", "품목유형", "품목구분"],
+                         "weak": ["type", "유형", "구분"]},
+        "safety_stock_qty": {"required": False, "strong": ["safety_stock_qty", "safety_stock", "safetystock", "안전재고", "안전재고량", "안전재고수량"], "weak": []},
+    },
 }
 
 
@@ -34,13 +44,24 @@ def norm_header(s: str) -> str:
     return re.sub(r"[\s_\-./·]+", "", s).casefold()
 
 
-_INDEX: dict[str, tuple[str, str]] = {}
-for _f, _spec in FIELDS.items():
-    for _strength in ("strong", "weak"):
-        for _a in _spec[_strength]:
-            _k = norm_header(_a)
-            assert _k not in _INDEX or _INDEX[_k] == (_f, _strength), f"별칭 충돌: {_a}"
-            _INDEX[_k] = (_f, _strength)
+def _build_index(fields: dict[str, dict]) -> dict[str, tuple[str, str]]:
+    index: dict[str, tuple[str, str]] = {}
+    for fname, spec in fields.items():
+        for strength in ("strong", "weak"):
+            for alias in spec[strength]:
+                k = norm_header(alias)
+                assert k not in index or index[k] == (fname, strength), f"별칭 충돌: {alias}"
+                index[k] = (fname, strength)
+    return index
+
+
+_INDEX = {entity: _build_index(fields) for entity, fields in ENTITY_FIELDS.items()}
+
+
+def field_for_header(header: str, entity: str) -> str | None:
+    """이 헤더가 해당 entity 의 어떤 필드 별칭인지 (없으면 None)."""
+    hit = _INDEX[entity].get(norm_header(header))
+    return hit[0] if hit else None
 
 
 @dataclass
@@ -76,15 +97,16 @@ def _find_override(sheet: ParsedSheet, ref: str):
     return None
 
 
-def map_sheet(sheet: ParsedSheet, overrides: dict[str, str] | None = None) -> SheetMapping:
+def map_sheet(sheet: ParsedSheet, overrides: dict[str, str] | None = None, entity: str = "monthly_demand") -> SheetMapping:
     """overrides: {필드: 헤더 이름 또는 열 문자(C)}. 사용자가 HOLD 를 풀 때 쓴다."""
     overrides = overrides or {}
+    fields, index = ENTITY_FIELDS[entity], _INDEX[entity]
     m = SheetMapping("MAPPED")
     cands: dict[str, list[tuple[str, object, str]]] = {}      # field → [(strength, header, label)]
     matched_cols: set[int] = set()
     for h in sheet.header:
         for label in h.labels:
-            hit = _INDEX.get(norm_header(label))
+            hit = index.get(norm_header(label))
             if hit:
                 cands.setdefault(hit[0], []).append((hit[1], h, label))
                 matched_cols.add(h.col)
@@ -93,11 +115,11 @@ def map_sheet(sheet: ParsedSheet, overrides: dict[str, str] | None = None) -> Sh
     for h in sheet.header:
         if h.name:
             seen[norm_header(h.name)] = seen.get(norm_header(h.name), 0) + 1
-    dup = sorted(k for k, n in seen.items() if n > 1 and k in _INDEX)
+    dup = sorted(k for k, n in seen.items() if n > 1 and k in index)
     for k in dup:
-        m.holds.append(MappingHold("DUPLICATE_HEADER", f"같은 이름의 열이 여럿입니다: '{k}'", _INDEX[k][0]))
+        m.holds.append(MappingHold("DUPLICATE_HEADER", f"같은 이름의 열이 여럿입니다: '{k}'", index[k][0]))
 
-    for fname, spec in FIELDS.items():
+    for fname, spec in fields.items():
         if fname in overrides:
             h = _find_override(sheet, overrides[fname])
             if h is None:
@@ -121,7 +143,7 @@ def map_sheet(sheet: ParsedSheet, overrides: dict[str, str] | None = None) -> Sh
 
     used = {f.col for f in m.fields.values()}
     m.unmapped_headers = [h.display for h in sheet.header if h.col not in used and (h.name or h.group)]
-    required_hit = any(FIELDS[f]["required"] for f in m.fields)
+    required_hit = any(fields[f]["required"] for f in m.fields)
     if not m.holds:
         return m
     # 필수 필드를 하나도 못 찾았으면 이 시트는 대상이 아니다(설명 시트 등). 일부만 찾았으면 사람이 풀어야 하는 HOLD.

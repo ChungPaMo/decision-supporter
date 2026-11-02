@@ -40,6 +40,7 @@ async def preview(
     except FileError as exc:
         raise HTTPException(exc.http_status, {"code": exc.code, "message": exc.message})
     for s in result.sheets:                       # 응답 크기 제한: 전체 검증은 끝났고 표시만 자른다
+        s.issues_total, s.records_total = len(s.issues), len(s.records)
         if len(s.issues) > MAX_RETURNED_ISSUES:
             s.issues = s.issues[:MAX_RETURNED_ISSUES]
         s.records = s.records[:MAX_RETURNED_RECORDS]

@@ -1,7 +1,7 @@
 """데이터 계약 v1 (docs/data_contract_v1.md 의 코드 표현).
 
 - 수량은 모두 Decimal. float·NaN·지수 표기는 받지 않는다 (PoC E05: pydantic lax 모드가 NaN·전각 숫자를 통과시킴).
-- 필드 이름은 DB 열 이름과 같다. tests/test_contract_matches_db.py 가 이를 검사한다.
+- 필드 이름은 DB 열 이름과 같다. tests/test_contracts.py 가 이를 검사한다.
 - 업로드·승인 메타(source_type, batch_id)는 행 계약이 아니라 배치 계약에 속한다. 행에는 DB가 배치에서 채운다.
 """
 
@@ -14,7 +14,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-CONTRACT_VERSION = "1.0"
+CONTRACT_VERSION = "1.1"
 
 Qty = Annotated[Decimal, Field(ge=0, allow_inf_nan=False, max_digits=18, decimal_places=4)]
 Period = Annotated[str, Field(pattern=r"^\d{4}-(0[1-9]|1[0-2])$")]   # YYYY-MM
@@ -29,10 +29,12 @@ class SourceType(StrEnum):
 
 
 class BatchStatus(StrEnum):
-    UPLOADED = "UPLOADED"      # 원본 수신·파싱 완료, 아직 검증 전
-    VALIDATED = "VALIDATED"    # 정합성 검증 통과(경고 포함 가능), 사용자 승인 대기
-    APPROVED = "APPROVED"      # 사용자가 승인 → 이 상태의 배치만 업무 테이블에 행을 쓸 수 있다
-    REJECTED = "REJECTED"      # 반려. 같은 파일 재업로드는 허용
+    """배치 상태. 검증 결과가 곧 상태다(업로드·재검증 때마다 서버가 다시 계산). 최종 상태는 APPROVED, REJECTED."""
+    MAPPING_HOLD = "MAPPING_HOLD"                # 열 매핑이 불확실 → 사용자가 열을 지정해야 함. 승인 불가
+    HAS_ERRORS = "HAS_ERRORS"                    # 검증 ERROR 1건 이상. 승인 불가 (원본 수정 후 재업로드, 또는 제품 등록 후 재검증)
+    READY_FOR_APPROVAL = "READY_FOR_APPROVAL"    # 오류 0건. 사용자의 명시적 승인 대기 (경고는 있을 수 있음)
+    APPROVED = "APPROVED"                        # 승인됨. 최종·불변. 승인한 트랜잭션에서만 업무 행을 쓸 수 있다
+    REJECTED = "REJECTED"                        # 반려됨. 최종·불변. 같은 파일 재업로드는 허용
 
 
 class UnitDimension(StrEnum):
@@ -74,7 +76,7 @@ class UnitRow(_Row):
 class ProductRow(_Row):
     product_id: Code
     product_name: Annotated[str, Field(min_length=1, max_length=200)]
-    product_type: ProductType
+    product_type: ProductType | None = None      # 선택. 없으면 값을 지어내지 않고 NULL
     base_unit: Code
     safety_stock_qty: Qty = Decimal(0)
 

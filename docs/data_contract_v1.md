@@ -1,6 +1,6 @@
 # 데이터 계약 v1 (2026-10-30)
 
-> 상태: **초안 v1.0** — 예측 담당·업무 규칙/UX 담당 확인 전. 기계 판독본: [contracts/data_contract_v1.schema.json](../contracts/data_contract_v1.schema.json) (코드 [backend/app/contracts.py](../backend/app/contracts.py)에서 생성, 테스트가 동기화 검사). DB 구현: [backend/app/models.py](../backend/app/models.py), 마이그레이션 `0001`.
+> 상태: **초안 v1.1** — 예측 담당·업무 규칙/UX 담당 확인 전. 기계 판독본: [contracts/data_contract_v1.schema.json](../contracts/data_contract_v1.schema.json) (코드 [backend/app/contracts.py](../backend/app/contracts.py)에서 생성, 테스트가 동기화 검사). DB 구현: [backend/app/models.py](../backend/app/models.py), 마이그레이션 `0001`.
 > 책임: 데이터 처리·검증·DB·API = 백엔드/데이터 담당. 예측 필드 의미 = 예측·최적화 담당. 업무 규칙·KPI = 업무 규칙/UX 담당. 아래 ⚠는 담당자 확인이 필요한 가정이다.
 
 ## 1. 공통 규칙
@@ -41,7 +41,7 @@
 
 | 테이블 | 키 | 핵심 필드 / 제약 |
 |---|---|---|
-| `product` | product_id | product_name, product_type(FINISHED/SEMI_FINISHED), base_unit, safety_stock_qty ≥ 0 |
+| `product` | product_id | product_name, base_unit, product_type(FINISHED/SEMI_FINISHED, **선택**, 없으면 NULL — v1.1), safety_stock_qty ≥ 0 (없으면 0, 경고) |
 | `material` | material_id | material_name, base_unit, safety_stock_qty ≥ 0 |
 | `sales_order` | order_id | product_id, order_qty > 0, unit, order_date, due_date ≥ order_date, status(OPEN/CLOSED/CANCELLED) |
 | `bom_header` | bom_id; (product_id, bom_version) 유일 | status(DRAFT/APPROVED), is_active, valid_from/valid_to, base_qty > 0. **활성 버전은 같은 제품에서 유효기간이 겹칠 수 없음**(PostgreSQL EXCLUDE), 미승인 BOM은 활성 불가 |
@@ -53,13 +53,17 @@ v1에서 **제외**: 라우팅(제품 1개당 소요시간), 공급사·리드�
 
 ## 4. 승인·검증 게이트 (예측 모듈에 나쁜 데이터를 넘기지 않는 설계)
 
-배치 상태: `UPLOADED → VALIDATED → APPROVED` 또는 `REJECTED`.
+배치 상태 (v1.1, 마이그레이션 0002): `MAPPING_HOLD` / `HAS_ERRORS` / `READY_FOR_APPROVAL` → `APPROVED` 또는 `REJECTED`(최종). 상태는 서버가 검증할 때마다 다시 계산한다. API 계약: [api_contract_batches.md](api_contract_batches.md).
 
-1. 업무 테이블에 행을 쓰려면 그 행의 `batch_id`가 **APPROVED** 여야 한다 — 애플리케이션 검증 + DB 트리거(`require_approved_batch`) 이중 장치. (PoC E10: 한쪽만으로는 뚫린 경로가 실제로 있었음.)
-2. APPROVED 배치는 `blocking_error_count = 0`, `approved_by`·`approved_at` 필수(CHECK). 승인 후 상태·출처·해시는 변경 불가(트리거).
-3. 예측 모듈은 뷰 `v_forecast_input_monthly_demand`만 읽는다: 승인되고 오류 0인 배치의 행만 노출.
-4. **중복 업로드**: `source_sha256`이 같은 비반려 배치가 있으면 재업로드 거부(부분 유니크 인덱스). 반려 후에는 재업로드 가능.
-5. 승인자는 역할 코드(`approved_by`)만 기록, 실명 금지.
+1. 업무 테이블에 행을 쓰려면 그 행의 `batch_id`가 **그 트랜잭션에서 APPROVED 가 된** 배치여야 한다 — 애플리케이션 검증 + DB 트리거(`require_approved_batch`: `approved_at = now()`) 이중 장치. 승인 커밋 이후에는 같은 배치에 행을 추가·수정할 수 없다. (PoC E10: 한쪽만으로는 뚫린 경로가 실제로 있었음.)
+2. 배치는 `READY_FOR_APPROVAL`(오류 0)에서만 `APPROVED` 가 될 수 있고, 처음부터 최종 상태로 INSERT 할 수 없다. 최종 상태(APPROVED·REJECTED)는 어떤 컬럼도 바꿀 수 없다(트리거). `approved_by`·`approved_at`·`approved_record_count`(>0) 필수(CHECK).
+3. 승인 커밋 시점(DEFERRED 제약 트리거)에 `approved_record_count` 와 실제 INSERT 된 행 수를 DB 가 대조한다 → 승인만 되고 행이 빠지는 부분 커밋 차단.
+4. 업무 테이블·배치·원본 파일(`batch_source_file`)은 삭제할 수 없고(append-only), 원본 파일은 수정도 불가.
+5. 예측 모듈은 뷰 `v_forecast_input_monthly_demand`만 읽는다: 승인되고 오류 0인 배치의 행만 노출.
+6. **중복 업로드**: 같은 entity 에 `source_sha256`이 같은 비반려 배치가 있으면 재업로드 거부(부분 유니크 인덱스). 반려 후에는 재업로드 가능. **키 중복**: 이미 승인된 (제품, 월)을 다시 승인할 수 없다(덮어쓰기 미지원, `KEYS_ALREADY_APPROVED`).
+7. 승인자·반려자는 역할 코드만 기록, 실명 금지.
+8. 승인 전 임시 보관: 원본 바이트(`batch_source_file`)와 설정(열 지정·기본 단위·시트)만 저장하고, 재검증·승인 때마다 원본을 다시 파싱한다. 검증 요약(`validation_result`)은 화면 표시용이며 승인에 쓰지 않는다. 승인은 사용자가 본 `result_digest` 에 바인딩된다.
+9. 제품 마스터(v1.1): `entity=product` 배치로 같은 게이트를 통과해 등록한다. `monthly_demand.product_id` 는 `product` 를 참조하므로 제품이 먼저 승인되어야 하며, 미등록 제품은 수요 검증의 `PRODUCT_NOT_REGISTERED` 오류다(제품 승인 후 재검증). 없는 제품을 자동 등록하거나 코드를 생성하지 않는다. 수요 배치는 제품 테이블에, 제품 배치는 수요 테이블에 쓸 수 없다(트리거). 기존 제품 값 변경은 v1.1 범위 밖(`EXISTING_PRODUCT_CONFLICT`).
 
 ## 5. 충돌·변경 처리 정책 (v1은 규칙만, 구현은 업로드 API 단계)
 

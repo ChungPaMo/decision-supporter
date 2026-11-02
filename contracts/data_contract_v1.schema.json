@@ -1,5 +1,5 @@
 {
-  "contract_version": "1.0",
+  "contract_version": "1.1",
   "models": {
     "BomHeaderRow": {
       "$defs": {
@@ -503,7 +503,15 @@
           "type": "string"
         },
         "product_type": {
-          "$ref": "#/$defs/ProductType"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProductType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "safety_stock_qty": {
           "anyOf": [
@@ -522,7 +530,6 @@
       "required": [
         "product_id",
         "product_name",
-        "product_type",
         "base_unit"
       ],
       "title": "ProductRow",

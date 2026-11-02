@@ -14,10 +14,10 @@ import uuid
 from decimal import Decimal
 
 from sqlalchemy import (
-    CheckConstraint, Date, DateTime, ForeignKey, Identity, Index, Integer, Numeric, String,
+    CheckConstraint, Date, DateTime, ForeignKey, Identity, Index, Integer, LargeBinary, Numeric, String,
     UniqueConstraint, func, text,
 )
-from sqlalchemy.dialects.postgresql import ExcludeConstraint, UUID
+from sqlalchemy.dialects.postgresql import ExcludeConstraint, JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.contracts import (
@@ -46,11 +46,25 @@ class ImportBatch(Base):
     source_name: Mapped[str] = mapped_column(String(260))                 # 파일명 또는 데이터셋 이름 (경로·사용자명 금지)
     source_note: Mapped[str | None] = mapped_column(String(500))          # PUBLIC_DEMAND: 원 출처·라이선스, SYNTHETIC: 생성 방법
     source_sha256: Mapped[str] = mapped_column(String(64))                # 원본 바이트의 SHA-256 (중복 업로드 탐지)
-    status: Mapped[str] = mapped_column(String(12), server_default=BatchStatus.UPLOADED.value)
+    status: Mapped[str] = mapped_column(String(20), server_default=BatchStatus.MAPPING_HOLD.value)
     uploaded_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     approved_by: Mapped[str | None] = mapped_column(String(60))           # 역할 코드. 실명 금지
     approved_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
     blocking_error_count: Mapped[int] = mapped_column(Integer, server_default="0")   # 검증 ERROR 수. 0이어야 승인 가능
+    # --- 0002: 승인 전 임시 보관(staging)과 승인 감사 정보 ---
+    entity: Mapped[str] = mapped_column(String(30), server_default="monthly_demand")
+    created_by: Mapped[str | None] = mapped_column(String(60))
+    default_unit: Mapped[str | None] = mapped_column(String(10))                        # 사용자가 지정한 설정 3종: 재검증 입력
+    column_overrides: Mapped[dict] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
+    sheet_filter: Mapped[str | None] = mapped_column(String(260))
+    warning_count: Mapped[int] = mapped_column(Integer, server_default="0")
+    result_digest: Mapped[str | None] = mapped_column(String(64))                       # 검증 결과(레코드·이슈 전체)의 SHA-256. 승인 요청이 이 값을 가리켜야 한다
+    validation_result: Mapped[dict | None] = mapped_column(JSONB)                       # 화면 표시용 스냅샷(레코드는 앞 100건). 승인에는 쓰지 않고 원본 재검증 결과를 쓴다
+    version: Mapped[int] = mapped_column(Integer, server_default="1")                   # 낙관적 잠금: 재검증마다 +1
+    approved_record_count: Mapped[int | None] = mapped_column(Integer)                  # 승인 시 반영한 행 수. 커밋 시점에 DB가 실제 행 수와 대조
+    rejected_by: Mapped[str | None] = mapped_column(String(60))
+    rejected_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
+    reject_reason: Mapped[str | None] = mapped_column(String(500))
 
     __table_args__ = (
         _in("source_type", SourceType),
@@ -58,9 +72,25 @@ class ImportBatch(Base):
         CheckConstraint("char_length(source_sha256) = 64", name="ck_batch_sha_len"),
         CheckConstraint("blocking_error_count >= 0 AND (status <> 'APPROVED' OR blocking_error_count = 0)", name="ck_batch_no_errors_when_approved"),
         CheckConstraint("status <> 'APPROVED' OR (approved_by IS NOT NULL AND approved_at IS NOT NULL)", name="ck_batch_approved_meta"),
-        # 같은 원본이 이미 살아있는(반려되지 않은) 배치로 있으면 재업로드를 막는다. 반려 후 재업로드는 허용.
-        Index("uq_batch_live_sha", "source_sha256", unique=True, postgresql_where=text("status <> 'REJECTED'")),
+        CheckConstraint("status <> 'APPROVED' OR approved_record_count > 0", name="ck_batch_approved_count"),
+        CheckConstraint("status <> 'READY_FOR_APPROVAL' OR blocking_error_count = 0", name="ck_batch_ready_no_errors"),
+        CheckConstraint("status <> 'HAS_ERRORS' OR blocking_error_count > 0", name="ck_batch_errors_counted"),
+        CheckConstraint("status <> 'REJECTED' OR (rejected_by IS NOT NULL AND rejected_at IS NOT NULL AND reject_reason IS NOT NULL)", name="ck_batch_rejected_meta"),
+        CheckConstraint("entity IN ('monthly_demand', 'product')", name="ck_batch_entity"),
+        # 같은 entity 에 같은 원본이 살아있는(반려되지 않은) 배치로 있으면 재업로드를 막는다. 반려 후 재업로드는 허용.
+        Index("uq_batch_live_entity_sha", "entity", "source_sha256", unique=True, postgresql_where=text("status <> 'REJECTED'")),
     )
+
+
+class BatchSourceFile(Base):
+    """업로드 원본 바이트. 한 번 쓰면 수정·삭제 불가(트리거). 재검증과 승인은 항상 이 바이트를 다시 파싱한다."""
+    __tablename__ = "batch_source_file"
+
+    batch_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("import_batch.batch_id"), primary_key=True)
+    content: Mapped[bytes] = mapped_column(LargeBinary)
+    size_bytes: Mapped[int] = mapped_column(Integer)
+
+    __table_args__ = (CheckConstraint("size_bytes = octet_length(content) AND size_bytes > 0", name="ck_source_file_size"),)
 
 
 def _batch_fk() -> Mapped[uuid.UUID]:
@@ -84,7 +114,7 @@ class Product(Base):
 
     product_id: Mapped[str] = mapped_column(String(40), primary_key=True)
     product_name: Mapped[str] = mapped_column(String(200))
-    product_type: Mapped[str] = mapped_column(String(15))
+    product_type: Mapped[str | None] = mapped_column(String(15))      # 0003: 선택 필드. 파일에 없으면 NULL
     base_unit: Mapped[str] = mapped_column(ForeignKey("unit.unit_code"))
     safety_stock_qty: Mapped[Decimal] = mapped_column(QTY, server_default="0")
     batch_id: Mapped[uuid.UUID] = _batch_fk()
