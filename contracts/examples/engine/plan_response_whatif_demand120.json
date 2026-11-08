@@ -1,0 +1,1681 @@
+{
+  "contract_version": "plan-output-0.1-draft",
+  "request_id": "PREQ-20261108-DEMAND120",
+  "status": "OK",
+  "engine": "chungpamo-planner 0.1.0",
+  "input_digest": "sha256:f30b878ff49cc12b733612874f2b8c28c99ddaa2d2b5841cf000f8216c3cae93",
+  "scenario": {
+    "scenario_id": "DEMAND120",
+    "label": "수요 +20%",
+    "demand_multiplier": "1.2",
+    "overrides": [],
+    "base_request_id": "PREQ-20261108-BASE",
+    "reforecast": false
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "code": "SYNTHETIC_SUPPLY_DATA",
+      "detail": "BOM·재고·CAPA·라우팅·비용이 합성 데이터임"
+    }
+  ],
+  "comparison": {
+    "comparable_plan_ids": [],
+    "ranking": null,
+    "note": "FEASIBLE 안끼리만 비교 대상. 엔진은 추천·순위를 내지 않고 사용자가 선택한다",
+    "infeasibility_reasons": [
+      {
+        "plan_id": "PLAN-BASE",
+        "feasibility": "UNVERIFIED",
+        "causes": [
+          {
+            "constraint_id": "MAT-M001-2027-01",
+            "status": "UNVERIFIED",
+            "note": "누적 부족 377.375 kg: 조달 가능 여부 미확인 (리드타임·입고예정 데이터 없음)"
+          }
+        ]
+      },
+      {
+        "plan_id": "PLAN-STABLE",
+        "feasibility": "INFEASIBLE",
+        "causes": [
+          {
+            "constraint_id": "DEM-0001001-2026-11",
+            "status": "VIOLATED",
+            "note": "결품(이월) 27 EA — 원인: L1 작업시간 한도"
+          },
+          {
+            "constraint_id": "DEM-0001001-2026-12",
+            "status": "VIOLATED",
+            "note": "결품(이월) 56 EA — 원인: L1 작업시간 한도"
+          },
+          {
+            "constraint_id": "DEM-0001001-2027-01",
+            "status": "VIOLATED",
+            "note": "결품(이월) 144 EA — 원인: L1 작업시간 한도"
+          },
+          {
+            "constraint_id": "MAT-M001-2027-01",
+            "status": "UNVERIFIED",
+            "note": "누적 부족 534.875 kg: 조달 가능 여부 미확인 (리드타임·입고예정 데이터 없음)"
+          }
+        ]
+      },
+      {
+        "plan_id": "PLAN-COST",
+        "feasibility": "INFEASIBLE",
+        "causes": [
+          {
+            "constraint_id": "DEM-0001001-2026-11",
+            "status": "VIOLATED",
+            "note": "결품(이월) 73 EA — 원인: L1 작업시간 한도"
+          },
+          {
+            "constraint_id": "DEM-0001001-2026-12",
+            "status": "VIOLATED",
+            "note": "결품(이월) 134 EA — 원인: L1 작업시간 한도"
+          },
+          {
+            "constraint_id": "DEM-0001001-2027-01",
+            "status": "VIOLATED",
+            "note": "결품(이월) 234 EA — 원인: L1 작업시간 한도"
+          }
+        ]
+      }
+    ]
+  },
+  "export": {
+    "contract_version": "plan-export-0.1-draft",
+    "title": "합성 데이터 3안 비교 (수요 +20%)",
+    "export_name": "plan_compare_demand120",
+    "data_classification": "MIXED",
+    "engine": "chungpamo-planner 0.1.0",
+    "generated_at": "2026-11-08T10:00:00+09:00",
+    "horizon": {
+      "period_from": "2026-11",
+      "period_to": "2027-01"
+    },
+    "forecast_basis": {
+      "quantile": null,
+      "p50_method": "MA12",
+      "quantile_model_version": "lgbm-q-0.1.0",
+      "trained_until": "2026-10-31"
+    },
+    "plans": [
+      {
+        "plan_id": "PLAN-BASE",
+        "plan_type": "BASELINE",
+        "feasibility": "UNVERIFIED",
+        "kpis": [
+          {
+            "code": "TOTAL_PRODUCTION",
+            "label": "완제품 총 생산량",
+            "value": "1439",
+            "unit": "EA"
+          },
+          {
+            "code": "PLANNED_DEMAND",
+            "label": "계획 수요 합 (P50)",
+            "value": "1440",
+            "unit": "EA"
+          },
+          {
+            "code": "STOCKOUT_QTY",
+            "label": "월말 결품 이월 수량 합 (계획 수요 기준)",
+            "value": "0",
+            "unit": "EA·월"
+          },
+          {
+            "code": "DEMAND_COVERAGE_P80",
+            "label": "P80 수요 실현 시 기간 누계 충족률",
+            "value": "87.64",
+            "unit": "%"
+          },
+          {
+            "code": "SAFETY_STOCK_SHORTFALL",
+            "label": "월말 안전재고 미달 수량 합",
+            "value": "4",
+            "unit": "EA"
+          },
+          {
+            "code": "END_INVENTORY_AT_P50",
+            "label": "기간 말 완제품 재고 (P50 수요 실현 시)",
+            "value": "6",
+            "unit": "EA"
+          },
+          {
+            "code": "OVERTIME_HOURS",
+            "label": "잔업 시간 합",
+            "value": "100.38",
+            "unit": "h"
+          },
+          {
+            "code": "MATERIAL_SHORTAGE_ITEMS",
+            "label": "조달 필요 자재 품목 수",
+            "value": "1",
+            "unit": "건"
+          },
+          {
+            "code": "MATERIAL_COST",
+            "label": "자재비",
+            "value": "11615925",
+            "unit": "KRW"
+          },
+          {
+            "code": "REGULAR_LABOR_COST",
+            "label": "정규 생산비",
+            "value": "17958000",
+            "unit": "KRW"
+          },
+          {
+            "code": "OVERTIME_COST",
+            "label": "잔업비",
+            "value": "4517100",
+            "unit": "KRW"
+          },
+          {
+            "code": "HOLDING_COST",
+            "label": "재고유지비 (P50 수요 기준)",
+            "value": "52000",
+            "unit": "KRW"
+          },
+          {
+            "code": "TOTAL_COST",
+            "label": "총비용 (위 4개 합, 결품 페널티 제외)",
+            "value": "34143025",
+            "unit": "KRW"
+          }
+        ],
+        "production": [
+          {
+            "product_id": "0001001",
+            "product_name": "합성 히터 A",
+            "period": "2026-11",
+            "planned_qty": "483",
+            "unit": "EA",
+            "demand_qty": "480",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "10",
+            "note": null
+          },
+          {
+            "product_id": "0001001",
+            "product_name": "합성 히터 A",
+            "period": "2026-12",
+            "planned_qty": "480",
+            "unit": "EA",
+            "demand_qty": "480",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "10",
+            "note": null
+          },
+          {
+            "product_id": "0001001",
+            "product_name": "합성 히터 A",
+            "period": "2027-01",
+            "planned_qty": "476",
+            "unit": "EA",
+            "demand_qty": "480",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "6",
+            "note": "L1 한도 도달: 목표 480 EA 중 476 EA 생산"
+          },
+          {
+            "product_id": "0001002",
+            "product_name": "합성 히터 B",
+            "period": "2026-11",
+            "planned_qty": "463",
+            "unit": "EA",
+            "demand_qty": "483",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "종속수요(상위 BOM 생산량)"
+          },
+          {
+            "product_id": "0001002",
+            "product_name": "합성 히터 B",
+            "period": "2026-12",
+            "planned_qty": "480",
+            "unit": "EA",
+            "demand_qty": "480",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "종속수요(상위 BOM 생산량)"
+          },
+          {
+            "product_id": "0001002",
+            "product_name": "합성 히터 B",
+            "period": "2027-01",
+            "planned_qty": "476",
+            "unit": "EA",
+            "demand_qty": "476",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "종속수요(상위 BOM 생산량)"
+          }
+        ],
+        "materials": [
+          {
+            "material_id": "M001",
+            "material_name": "합성 강판",
+            "period": "2026-11",
+            "required_qty": "1267.875",
+            "available_qty": "3500",
+            "shortage_qty": "0",
+            "unit": "kg",
+            "note": null
+          },
+          {
+            "material_id": "M001",
+            "material_name": "합성 강판",
+            "period": "2026-12",
+            "required_qty": "1260",
+            "available_qty": "2232.125",
+            "shortage_qty": "0",
+            "unit": "kg",
+            "note": null
+          },
+          {
+            "material_id": "M001",
+            "material_name": "합성 강판",
+            "period": "2027-01",
+            "required_qty": "1249.5",
+            "available_qty": "972.125",
+            "shortage_qty": "377.375",
+            "unit": "kg",
+            "note": "조달 필요량. 공급사 리드타임·공급 가능량 데이터 없음"
+          },
+          {
+            "material_id": "M002",
+            "material_name": "합성 볼트",
+            "period": "2026-11",
+            "required_qty": "1852",
+            "available_qty": "6000",
+            "shortage_qty": "0",
+            "unit": "EA",
+            "note": null
+          },
+          {
+            "material_id": "M002",
+            "material_name": "합성 볼트",
+            "period": "2026-12",
+            "required_qty": "1920",
+            "available_qty": "4148",
+            "shortage_qty": "0",
+            "unit": "EA",
+            "note": null
+          },
+          {
+            "material_id": "M002",
+            "material_name": "합성 볼트",
+            "period": "2027-01",
+            "required_qty": "1904",
+            "available_qty": "2228",
+            "shortage_qty": "0",
+            "unit": "EA",
+            "note": null
+          }
+        ],
+        "constraints": [
+          {
+            "constraint_id": "CAP-L1-2026-11",
+            "label": "L1 작업시간 (정규+잔업)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L1",
+            "period": "2026-11",
+            "limit_value": "210",
+            "used_value": "202.86",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "DEM-0001001-2026-11",
+            "label": "합성 히터 A 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": null,
+            "period": "2026-11",
+            "limit_value": "480",
+            "used_value": "490",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": null
+          },
+          {
+            "constraint_id": "SS-0001001-2026-11",
+            "label": "합성 히터 A 월말 재고 ≥ 안전재고",
+            "dimension": "OTHER",
+            "strength": "SOFT",
+            "status": "SATISFIED",
+            "resource_id": null,
+            "period": "2026-11",
+            "limit_value": "10",
+            "used_value": "10",
+            "unit": "EA",
+            "source": "product.safety_stock_qty",
+            "note": null
+          },
+          {
+            "constraint_id": "CAP-L1-2026-12",
+            "label": "L1 작업시간 (정규+잔업)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L1",
+            "period": "2026-12",
+            "limit_value": "220",
+            "used_value": "201.6",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "DEM-0001001-2026-12",
+            "label": "합성 히터 A 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": null,
+            "period": "2026-12",
+            "limit_value": "480",
+            "used_value": "490",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": null
+          },
+          {
+            "constraint_id": "SS-0001001-2026-12",
+            "label": "합성 히터 A 월말 재고 ≥ 안전재고",
+            "dimension": "OTHER",
+            "strength": "SOFT",
+            "status": "SATISFIED",
+            "resource_id": null,
+            "period": "2026-12",
+            "limit_value": "10",
+            "used_value": "10",
+            "unit": "EA",
+            "source": "product.safety_stock_qty",
+            "note": null
+          },
+          {
+            "constraint_id": "CAP-L1-2027-01",
+            "label": "L1 작업시간 (정규+잔업)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L1",
+            "period": "2027-01",
+            "limit_value": "200",
+            "used_value": "199.92",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": "한도 도달: 목표 생산에 201.6 h 필요"
+          },
+          {
+            "constraint_id": "DEM-0001001-2027-01",
+            "label": "합성 히터 A 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": null,
+            "period": "2027-01",
+            "limit_value": "480",
+            "used_value": "486",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": null
+          },
+          {
+            "constraint_id": "SS-0001001-2027-01",
+            "label": "합성 히터 A 월말 재고 ≥ 안전재고",
+            "dimension": "OTHER",
+            "strength": "SOFT",
+            "status": "VIOLATED",
+            "resource_id": null,
+            "period": "2027-01",
+            "limit_value": "10",
+            "used_value": "6",
+            "unit": "EA",
+            "source": "product.safety_stock_qty",
+            "note": "안전재고 미달 4 EA"
+          },
+          {
+            "constraint_id": "CAP-L2-2026-11",
+            "label": "L2 작업시간 (정규)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L2",
+            "period": "2026-11",
+            "limit_value": "168",
+            "used_value": "46.3",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "DEM-0001002-2026-11",
+            "label": "합성 히터 B 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": null,
+            "period": "2026-11",
+            "limit_value": "483",
+            "used_value": "483",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": null
+          },
+          {
+            "constraint_id": "CAP-L2-2026-12",
+            "label": "L2 작업시간 (정규)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L2",
+            "period": "2026-12",
+            "limit_value": "176",
+            "used_value": "48",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "DEM-0001002-2026-12",
+            "label": "합성 히터 B 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": null,
+            "period": "2026-12",
+            "limit_value": "480",
+            "used_value": "480",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": null
+          },
+          {
+            "constraint_id": "CAP-L2-2027-01",
+            "label": "L2 작업시간 (정규)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L2",
+            "period": "2027-01",
+            "limit_value": "160",
+            "used_value": "47.6",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "DEM-0001002-2027-01",
+            "label": "합성 히터 B 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": null,
+            "period": "2027-01",
+            "limit_value": "476",
+            "used_value": "476",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M001-2026-11",
+            "label": "합성 강판 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M001",
+            "period": "2026-11",
+            "limit_value": "3500",
+            "used_value": "1367.875",
+            "unit": "kg",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M001-2026-12",
+            "label": "합성 강판 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M001",
+            "period": "2026-12",
+            "limit_value": "3500",
+            "used_value": "2627.875",
+            "unit": "kg",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M001-2027-01",
+            "label": "합성 강판 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "UNVERIFIED",
+            "resource_id": "M001",
+            "period": "2027-01",
+            "limit_value": "3500",
+            "used_value": "3877.375",
+            "unit": "kg",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": "누적 부족 377.375 kg: 조달 가능 여부 미확인 (리드타임·입고예정 데이터 없음)"
+          },
+          {
+            "constraint_id": "MAT-M002-2026-11",
+            "label": "합성 볼트 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M002",
+            "period": "2026-11",
+            "limit_value": "6000",
+            "used_value": "1852",
+            "unit": "EA",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M002-2026-12",
+            "label": "합성 볼트 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M002",
+            "period": "2026-12",
+            "limit_value": "6000",
+            "used_value": "3772",
+            "unit": "EA",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M002-2027-01",
+            "label": "합성 볼트 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M002",
+            "period": "2027-01",
+            "limit_value": "6000",
+            "used_value": "5676",
+            "unit": "EA",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          }
+        ],
+        "assumptions": [
+          "수요 기준 P50 × 시나리오 배수 1.2, EA 는 정수 올림",
+          "잔업 허용",
+          "월별 필요량만큼 생산 (chase)",
+          "안전재고는 SOFT, 월별 수요 충족은 HARD (업무 규칙 확정 전 기본값)",
+          "자재 부족은 조달 필요량으로 표시하고 조달 가능 여부는 UNVERIFIED (공급사·리드타임 데이터 없음)",
+          "정규 생산비는 사용 시간 비례로 계산 (PoC decision_logic §5와 같은 가정)",
+          "BOM·재고·CAPA·라우팅·비용은 합성 데이터"
+        ]
+      },
+      {
+        "plan_id": "PLAN-STABLE",
+        "plan_type": "STABLE",
+        "feasibility": "INFEASIBLE",
+        "kpis": [
+          {
+            "code": "TOTAL_PRODUCTION",
+            "label": "완제품 총 생산량",
+            "value": "1499",
+            "unit": "EA"
+          },
+          {
+            "code": "PLANNED_DEMAND",
+            "label": "계획 수요 합 (P80)",
+            "value": "1650",
+            "unit": "EA"
+          },
+          {
+            "code": "STOCKOUT_QTY",
+            "label": "월말 결품 이월 수량 합 (계획 수요 기준)",
+            "value": "227",
+            "unit": "EA·월"
+          },
+          {
+            "code": "DEMAND_COVERAGE_P80",
+            "label": "P80 수요 실현 시 기간 누계 충족률",
+            "value": "91.27",
+            "unit": "%"
+          },
+          {
+            "code": "SAFETY_STOCK_SHORTFALL",
+            "label": "월말 안전재고 미달 수량 합",
+            "value": "30",
+            "unit": "EA"
+          },
+          {
+            "code": "END_INVENTORY_AT_P50",
+            "label": "기간 말 완제품 재고 (P50 수요 실현 시)",
+            "value": "66",
+            "unit": "EA"
+          },
+          {
+            "code": "OVERTIME_HOURS",
+            "label": "잔업 시간 합",
+            "value": "125.58",
+            "unit": "h"
+          },
+          {
+            "code": "MATERIAL_SHORTAGE_ITEMS",
+            "label": "조달 필요 자재 품목 수",
+            "value": "1",
+            "unit": "건"
+          },
+          {
+            "code": "MATERIAL_COST",
+            "label": "자재비",
+            "value": "12100425",
+            "unit": "KRW"
+          },
+          {
+            "code": "REGULAR_LABOR_COST",
+            "label": "정규 생산비",
+            "value": "18078000",
+            "unit": "KRW"
+          },
+          {
+            "code": "OVERTIME_COST",
+            "label": "잔업비",
+            "value": "5651100",
+            "unit": "KRW"
+          },
+          {
+            "code": "HOLDING_COST",
+            "label": "재고유지비 (P50 수요 기준)",
+            "value": "326000",
+            "unit": "KRW"
+          },
+          {
+            "code": "TOTAL_COST",
+            "label": "총비용 (위 4개 합, 결품 페널티 제외)",
+            "value": "36155525",
+            "unit": "KRW"
+          }
+        ],
+        "production": [
+          {
+            "product_id": "0001001",
+            "product_name": "합성 히터 A",
+            "period": "2026-11",
+            "planned_qty": "500",
+            "unit": "EA",
+            "demand_qty": "534",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "L1 한도 도달: 목표 537 EA 중 500 EA 생산"
+          },
+          {
+            "product_id": "0001001",
+            "product_name": "합성 히터 A",
+            "period": "2026-12",
+            "planned_qty": "523",
+            "unit": "EA",
+            "demand_qty": "552",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "L1 한도 도달: 목표 589 EA 중 523 EA 생산"
+          },
+          {
+            "product_id": "0001001",
+            "product_name": "합성 히터 A",
+            "period": "2027-01",
+            "planned_qty": "476",
+            "unit": "EA",
+            "demand_qty": "564",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "L1 한도 도달: 목표 630 EA 중 476 EA 생산"
+          },
+          {
+            "product_id": "0001002",
+            "product_name": "합성 히터 B",
+            "period": "2026-11",
+            "planned_qty": "480",
+            "unit": "EA",
+            "demand_qty": "500",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "종속수요(상위 BOM 생산량)"
+          },
+          {
+            "product_id": "0001002",
+            "product_name": "합성 히터 B",
+            "period": "2026-12",
+            "planned_qty": "523",
+            "unit": "EA",
+            "demand_qty": "523",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "종속수요(상위 BOM 생산량)"
+          },
+          {
+            "product_id": "0001002",
+            "product_name": "합성 히터 B",
+            "period": "2027-01",
+            "planned_qty": "476",
+            "unit": "EA",
+            "demand_qty": "476",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "종속수요(상위 BOM 생산량)"
+          }
+        ],
+        "materials": [
+          {
+            "material_id": "M001",
+            "material_name": "합성 강판",
+            "period": "2026-11",
+            "required_qty": "1312.5",
+            "available_qty": "3500",
+            "shortage_qty": "0",
+            "unit": "kg",
+            "note": null
+          },
+          {
+            "material_id": "M001",
+            "material_name": "합성 강판",
+            "period": "2026-12",
+            "required_qty": "1372.875",
+            "available_qty": "2187.5",
+            "shortage_qty": "0",
+            "unit": "kg",
+            "note": null
+          },
+          {
+            "material_id": "M001",
+            "material_name": "합성 강판",
+            "period": "2027-01",
+            "required_qty": "1249.5",
+            "available_qty": "814.625",
+            "shortage_qty": "534.875",
+            "unit": "kg",
+            "note": "조달 필요량. 공급사 리드타임·공급 가능량 데이터 없음"
+          },
+          {
+            "material_id": "M002",
+            "material_name": "합성 볼트",
+            "period": "2026-11",
+            "required_qty": "1920",
+            "available_qty": "6000",
+            "shortage_qty": "0",
+            "unit": "EA",
+            "note": null
+          },
+          {
+            "material_id": "M002",
+            "material_name": "합성 볼트",
+            "period": "2026-12",
+            "required_qty": "2092",
+            "available_qty": "4080",
+            "shortage_qty": "0",
+            "unit": "EA",
+            "note": null
+          },
+          {
+            "material_id": "M002",
+            "material_name": "합성 볼트",
+            "period": "2027-01",
+            "required_qty": "1904",
+            "available_qty": "1988",
+            "shortage_qty": "0",
+            "unit": "EA",
+            "note": null
+          }
+        ],
+        "constraints": [
+          {
+            "constraint_id": "CAP-L1-2026-11",
+            "label": "L1 작업시간 (정규+잔업)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L1",
+            "period": "2026-11",
+            "limit_value": "210",
+            "used_value": "210",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": "한도 도달: 목표 생산에 225.54 h 필요"
+          },
+          {
+            "constraint_id": "DEM-0001001-2026-11",
+            "label": "합성 히터 A 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "VIOLATED",
+            "resource_id": null,
+            "period": "2026-11",
+            "limit_value": "534",
+            "used_value": "507",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": "결품(이월) 27 EA — 원인: L1 작업시간 한도"
+          },
+          {
+            "constraint_id": "SS-0001001-2026-11",
+            "label": "합성 히터 A 월말 재고 ≥ 안전재고",
+            "dimension": "OTHER",
+            "strength": "SOFT",
+            "status": "VIOLATED",
+            "resource_id": null,
+            "period": "2026-11",
+            "limit_value": "10",
+            "used_value": "0",
+            "unit": "EA",
+            "source": "product.safety_stock_qty",
+            "note": "안전재고 미달 10 EA"
+          },
+          {
+            "constraint_id": "CAP-L1-2026-12",
+            "label": "L1 작업시간 (정규+잔업)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L1",
+            "period": "2026-12",
+            "limit_value": "220",
+            "used_value": "219.66",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": "한도 도달: 목표 생산에 247.38 h 필요"
+          },
+          {
+            "constraint_id": "DEM-0001001-2026-12",
+            "label": "합성 히터 A 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "VIOLATED",
+            "resource_id": null,
+            "period": "2026-12",
+            "limit_value": "579",
+            "used_value": "523",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": "결품(이월) 56 EA — 원인: L1 작업시간 한도"
+          },
+          {
+            "constraint_id": "SS-0001001-2026-12",
+            "label": "합성 히터 A 월말 재고 ≥ 안전재고",
+            "dimension": "OTHER",
+            "strength": "SOFT",
+            "status": "VIOLATED",
+            "resource_id": null,
+            "period": "2026-12",
+            "limit_value": "10",
+            "used_value": "0",
+            "unit": "EA",
+            "source": "product.safety_stock_qty",
+            "note": "안전재고 미달 10 EA"
+          },
+          {
+            "constraint_id": "CAP-L1-2027-01",
+            "label": "L1 작업시간 (정규+잔업)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L1",
+            "period": "2027-01",
+            "limit_value": "200",
+            "used_value": "199.92",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": "한도 도달: 목표 생산에 264.6 h 필요"
+          },
+          {
+            "constraint_id": "DEM-0001001-2027-01",
+            "label": "합성 히터 A 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "VIOLATED",
+            "resource_id": null,
+            "period": "2027-01",
+            "limit_value": "620",
+            "used_value": "476",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": "결품(이월) 144 EA — 원인: L1 작업시간 한도"
+          },
+          {
+            "constraint_id": "SS-0001001-2027-01",
+            "label": "합성 히터 A 월말 재고 ≥ 안전재고",
+            "dimension": "OTHER",
+            "strength": "SOFT",
+            "status": "VIOLATED",
+            "resource_id": null,
+            "period": "2027-01",
+            "limit_value": "10",
+            "used_value": "0",
+            "unit": "EA",
+            "source": "product.safety_stock_qty",
+            "note": "안전재고 미달 10 EA"
+          },
+          {
+            "constraint_id": "CAP-L2-2026-11",
+            "label": "L2 작업시간 (정규)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L2",
+            "period": "2026-11",
+            "limit_value": "168",
+            "used_value": "48",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "DEM-0001002-2026-11",
+            "label": "합성 히터 B 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": null,
+            "period": "2026-11",
+            "limit_value": "500",
+            "used_value": "500",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": null
+          },
+          {
+            "constraint_id": "CAP-L2-2026-12",
+            "label": "L2 작업시간 (정규)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L2",
+            "period": "2026-12",
+            "limit_value": "176",
+            "used_value": "52.3",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "DEM-0001002-2026-12",
+            "label": "합성 히터 B 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": null,
+            "period": "2026-12",
+            "limit_value": "523",
+            "used_value": "523",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": null
+          },
+          {
+            "constraint_id": "CAP-L2-2027-01",
+            "label": "L2 작업시간 (정규)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L2",
+            "period": "2027-01",
+            "limit_value": "160",
+            "used_value": "47.6",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "DEM-0001002-2027-01",
+            "label": "합성 히터 B 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": null,
+            "period": "2027-01",
+            "limit_value": "476",
+            "used_value": "476",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M001-2026-11",
+            "label": "합성 강판 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M001",
+            "period": "2026-11",
+            "limit_value": "3500",
+            "used_value": "1412.5",
+            "unit": "kg",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M001-2026-12",
+            "label": "합성 강판 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M001",
+            "period": "2026-12",
+            "limit_value": "3500",
+            "used_value": "2785.375",
+            "unit": "kg",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M001-2027-01",
+            "label": "합성 강판 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "UNVERIFIED",
+            "resource_id": "M001",
+            "period": "2027-01",
+            "limit_value": "3500",
+            "used_value": "4034.875",
+            "unit": "kg",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": "누적 부족 534.875 kg: 조달 가능 여부 미확인 (리드타임·입고예정 데이터 없음)"
+          },
+          {
+            "constraint_id": "MAT-M002-2026-11",
+            "label": "합성 볼트 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M002",
+            "period": "2026-11",
+            "limit_value": "6000",
+            "used_value": "1920",
+            "unit": "EA",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M002-2026-12",
+            "label": "합성 볼트 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M002",
+            "period": "2026-12",
+            "limit_value": "6000",
+            "used_value": "4012",
+            "unit": "EA",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M002-2027-01",
+            "label": "합성 볼트 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M002",
+            "period": "2027-01",
+            "limit_value": "6000",
+            "used_value": "5916",
+            "unit": "EA",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          }
+        ],
+        "assumptions": [
+          "수요 기준 P80 × 시나리오 배수 1.2, EA 는 정수 올림",
+          "잔업 허용",
+          "월별 필요량만큼 생산 (chase)",
+          "안전재고는 SOFT, 월별 수요 충족은 HARD (업무 규칙 확정 전 기본값)",
+          "자재 부족은 조달 필요량으로 표시하고 조달 가능 여부는 UNVERIFIED (공급사·리드타임 데이터 없음)",
+          "정규 생산비는 사용 시간 비례로 계산 (PoC decision_logic §5와 같은 가정)",
+          "BOM·재고·CAPA·라우팅·비용은 합성 데이터"
+        ]
+      },
+      {
+        "plan_id": "PLAN-COST",
+        "plan_type": "COST_SAVING",
+        "feasibility": "INFEASIBLE",
+        "kpis": [
+          {
+            "code": "TOTAL_PRODUCTION",
+            "label": "완제품 총 생산량",
+            "value": "1199",
+            "unit": "EA"
+          },
+          {
+            "code": "PLANNED_DEMAND",
+            "label": "계획 수요 합 (P50)",
+            "value": "1440",
+            "unit": "EA"
+          },
+          {
+            "code": "STOCKOUT_QTY",
+            "label": "월말 결품 이월 수량 합 (계획 수요 기준)",
+            "value": "441",
+            "unit": "EA·월"
+          },
+          {
+            "code": "DEMAND_COVERAGE_P80",
+            "label": "P80 수요 실현 시 기간 누계 충족률",
+            "value": "73.09",
+            "unit": "%"
+          },
+          {
+            "code": "SAFETY_STOCK_SHORTFALL",
+            "label": "월말 안전재고 미달 수량 합",
+            "value": "30",
+            "unit": "EA"
+          },
+          {
+            "code": "END_INVENTORY_AT_P50",
+            "label": "기간 말 완제품 재고 (P50 수요 실현 시)",
+            "value": "-234",
+            "unit": "EA"
+          },
+          {
+            "code": "OVERTIME_HOURS",
+            "label": "잔업 시간 합",
+            "value": "0",
+            "unit": "h"
+          },
+          {
+            "code": "MATERIAL_SHORTAGE_ITEMS",
+            "label": "조달 필요 자재 품목 수",
+            "value": "0",
+            "unit": "건"
+          },
+          {
+            "code": "MATERIAL_COST",
+            "label": "자재비",
+            "value": "9677925",
+            "unit": "KRW"
+          },
+          {
+            "code": "REGULAR_LABOR_COST",
+            "label": "정규 생산비",
+            "value": "17465400",
+            "unit": "KRW"
+          },
+          {
+            "code": "OVERTIME_COST",
+            "label": "잔업비",
+            "value": "0",
+            "unit": "KRW"
+          },
+          {
+            "code": "HOLDING_COST",
+            "label": "재고유지비 (P50 수요 기준)",
+            "value": "0",
+            "unit": "KRW"
+          },
+          {
+            "code": "TOTAL_COST",
+            "label": "총비용 (위 4개 합, 결품 페널티 제외)",
+            "value": "27143325",
+            "unit": "KRW"
+          }
+        ],
+        "production": [
+          {
+            "product_id": "0001001",
+            "product_name": "합성 히터 A",
+            "period": "2026-11",
+            "planned_qty": "400",
+            "unit": "EA",
+            "demand_qty": "480",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "L1 한도 도달: 목표 483 EA 중 400 EA 생산"
+          },
+          {
+            "product_id": "0001001",
+            "product_name": "합성 히터 A",
+            "period": "2026-12",
+            "planned_qty": "419",
+            "unit": "EA",
+            "demand_qty": "480",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "L1 한도 도달: 목표 563 EA 중 419 EA 생산"
+          },
+          {
+            "product_id": "0001001",
+            "product_name": "합성 히터 A",
+            "period": "2027-01",
+            "planned_qty": "380",
+            "unit": "EA",
+            "demand_qty": "480",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "L1 한도 도달: 목표 624 EA 중 380 EA 생산"
+          },
+          {
+            "product_id": "0001002",
+            "product_name": "합성 히터 B",
+            "period": "2026-11",
+            "planned_qty": "380",
+            "unit": "EA",
+            "demand_qty": "400",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "종속수요(상위 BOM 생산량)"
+          },
+          {
+            "product_id": "0001002",
+            "product_name": "합성 히터 B",
+            "period": "2026-12",
+            "planned_qty": "419",
+            "unit": "EA",
+            "demand_qty": "419",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "종속수요(상위 BOM 생산량)"
+          },
+          {
+            "product_id": "0001002",
+            "product_name": "합성 히터 B",
+            "period": "2027-01",
+            "planned_qty": "380",
+            "unit": "EA",
+            "demand_qty": "380",
+            "production_mode": "INHOUSE",
+            "ending_inventory_qty": "0",
+            "note": "종속수요(상위 BOM 생산량)"
+          }
+        ],
+        "materials": [
+          {
+            "material_id": "M001",
+            "material_name": "합성 강판",
+            "period": "2026-11",
+            "required_qty": "1050",
+            "available_qty": "3500",
+            "shortage_qty": "0",
+            "unit": "kg",
+            "note": null
+          },
+          {
+            "material_id": "M001",
+            "material_name": "합성 강판",
+            "period": "2026-12",
+            "required_qty": "1099.875",
+            "available_qty": "2450",
+            "shortage_qty": "0",
+            "unit": "kg",
+            "note": null
+          },
+          {
+            "material_id": "M001",
+            "material_name": "합성 강판",
+            "period": "2027-01",
+            "required_qty": "997.5",
+            "available_qty": "1350.125",
+            "shortage_qty": "0",
+            "unit": "kg",
+            "note": null
+          },
+          {
+            "material_id": "M002",
+            "material_name": "합성 볼트",
+            "period": "2026-11",
+            "required_qty": "1520",
+            "available_qty": "6000",
+            "shortage_qty": "0",
+            "unit": "EA",
+            "note": null
+          },
+          {
+            "material_id": "M002",
+            "material_name": "합성 볼트",
+            "period": "2026-12",
+            "required_qty": "1676",
+            "available_qty": "4480",
+            "shortage_qty": "0",
+            "unit": "EA",
+            "note": null
+          },
+          {
+            "material_id": "M002",
+            "material_name": "합성 볼트",
+            "period": "2027-01",
+            "required_qty": "1520",
+            "available_qty": "2804",
+            "shortage_qty": "0",
+            "unit": "EA",
+            "note": null
+          }
+        ],
+        "constraints": [
+          {
+            "constraint_id": "CAP-L1-2026-11",
+            "label": "L1 작업시간 (정규)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L1",
+            "period": "2026-11",
+            "limit_value": "168",
+            "used_value": "168",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": "한도 도달: 목표 생산에 202.86 h 필요"
+          },
+          {
+            "constraint_id": "DEM-0001001-2026-11",
+            "label": "합성 히터 A 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "VIOLATED",
+            "resource_id": null,
+            "period": "2026-11",
+            "limit_value": "480",
+            "used_value": "407",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": "결품(이월) 73 EA — 원인: L1 작업시간 한도"
+          },
+          {
+            "constraint_id": "SS-0001001-2026-11",
+            "label": "합성 히터 A 월말 재고 ≥ 안전재고",
+            "dimension": "OTHER",
+            "strength": "SOFT",
+            "status": "VIOLATED",
+            "resource_id": null,
+            "period": "2026-11",
+            "limit_value": "10",
+            "used_value": "0",
+            "unit": "EA",
+            "source": "product.safety_stock_qty",
+            "note": "안전재고 미달 10 EA"
+          },
+          {
+            "constraint_id": "CAP-L1-2026-12",
+            "label": "L1 작업시간 (정규)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L1",
+            "period": "2026-12",
+            "limit_value": "176",
+            "used_value": "175.98",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": "한도 도달: 목표 생산에 236.46 h 필요"
+          },
+          {
+            "constraint_id": "DEM-0001001-2026-12",
+            "label": "합성 히터 A 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "VIOLATED",
+            "resource_id": null,
+            "period": "2026-12",
+            "limit_value": "553",
+            "used_value": "419",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": "결품(이월) 134 EA — 원인: L1 작업시간 한도"
+          },
+          {
+            "constraint_id": "SS-0001001-2026-12",
+            "label": "합성 히터 A 월말 재고 ≥ 안전재고",
+            "dimension": "OTHER",
+            "strength": "SOFT",
+            "status": "VIOLATED",
+            "resource_id": null,
+            "period": "2026-12",
+            "limit_value": "10",
+            "used_value": "0",
+            "unit": "EA",
+            "source": "product.safety_stock_qty",
+            "note": "안전재고 미달 10 EA"
+          },
+          {
+            "constraint_id": "CAP-L1-2027-01",
+            "label": "L1 작업시간 (정규)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L1",
+            "period": "2027-01",
+            "limit_value": "160",
+            "used_value": "159.6",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": "한도 도달: 목표 생산에 262.08 h 필요"
+          },
+          {
+            "constraint_id": "DEM-0001001-2027-01",
+            "label": "합성 히터 A 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "VIOLATED",
+            "resource_id": null,
+            "period": "2027-01",
+            "limit_value": "614",
+            "used_value": "380",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": "결품(이월) 234 EA — 원인: L1 작업시간 한도"
+          },
+          {
+            "constraint_id": "SS-0001001-2027-01",
+            "label": "합성 히터 A 월말 재고 ≥ 안전재고",
+            "dimension": "OTHER",
+            "strength": "SOFT",
+            "status": "VIOLATED",
+            "resource_id": null,
+            "period": "2027-01",
+            "limit_value": "10",
+            "used_value": "0",
+            "unit": "EA",
+            "source": "product.safety_stock_qty",
+            "note": "안전재고 미달 10 EA"
+          },
+          {
+            "constraint_id": "CAP-L2-2026-11",
+            "label": "L2 작업시간 (정규)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L2",
+            "period": "2026-11",
+            "limit_value": "168",
+            "used_value": "38",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "DEM-0001002-2026-11",
+            "label": "합성 히터 B 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": null,
+            "period": "2026-11",
+            "limit_value": "400",
+            "used_value": "400",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": null
+          },
+          {
+            "constraint_id": "CAP-L2-2026-12",
+            "label": "L2 작업시간 (정규)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L2",
+            "period": "2026-12",
+            "limit_value": "176",
+            "used_value": "41.9",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "DEM-0001002-2026-12",
+            "label": "합성 히터 B 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": null,
+            "period": "2026-12",
+            "limit_value": "419",
+            "used_value": "419",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": null
+          },
+          {
+            "constraint_id": "CAP-L2-2027-01",
+            "label": "L2 작업시간 (정규)",
+            "dimension": "WORK_HOURS",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "L2",
+            "period": "2027-01",
+            "limit_value": "160",
+            "used_value": "38",
+            "unit": "h",
+            "source": "production_capacity·routing·calendar (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "DEM-0001002-2027-01",
+            "label": "합성 히터 B 월말까지 수요 충족 (미충족분은 이월)",
+            "dimension": "DUE_DATE",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": null,
+            "period": "2027-01",
+            "limit_value": "380",
+            "used_value": "380",
+            "unit": "EA",
+            "source": "forecast·inventory",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M001-2026-11",
+            "label": "합성 강판 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M001",
+            "period": "2026-11",
+            "limit_value": "3500",
+            "used_value": "1150",
+            "unit": "kg",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M001-2026-12",
+            "label": "합성 강판 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M001",
+            "period": "2026-12",
+            "limit_value": "3500",
+            "used_value": "2249.875",
+            "unit": "kg",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M001-2027-01",
+            "label": "합성 강판 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M001",
+            "period": "2027-01",
+            "limit_value": "3500",
+            "used_value": "3247.375",
+            "unit": "kg",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M002-2026-11",
+            "label": "합성 볼트 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M002",
+            "period": "2026-11",
+            "limit_value": "6000",
+            "used_value": "1520",
+            "unit": "EA",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M002-2026-12",
+            "label": "합성 볼트 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M002",
+            "period": "2026-12",
+            "limit_value": "6000",
+            "used_value": "3196",
+            "unit": "EA",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          },
+          {
+            "constraint_id": "MAT-M002-2027-01",
+            "label": "합성 볼트 누적 소요(안전재고 포함) ≤ 기준일 가용재고",
+            "dimension": "MATERIAL",
+            "strength": "HARD",
+            "status": "SATISFIED",
+            "resource_id": "M002",
+            "period": "2027-01",
+            "limit_value": "6000",
+            "used_value": "4716",
+            "unit": "EA",
+            "source": "inventory·bom (SYNTHETIC)",
+            "note": null
+          }
+        ],
+        "assumptions": [
+          "수요 기준 P50 × 시나리오 배수 1.2, EA 는 정수 올림",
+          "잔업 없음 (정규시간만)",
+          "정규시간 초과분을 앞 달 정규 여유에 선생산 (leveling)",
+          "안전재고는 SOFT, 월별 수요 충족은 HARD (업무 규칙 확정 전 기본값)",
+          "자재 부족은 조달 필요량으로 표시하고 조달 가능 여부는 UNVERIFIED (공급사·리드타임 데이터 없음)",
+          "정규 생산비는 사용 시간 비례로 계산 (PoC decision_logic §5와 같은 가정)",
+          "BOM·재고·CAPA·라우팅·비용은 합성 데이터"
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "source_type": "PUBLIC_DEMAND",
+        "name": "월별 수요 (예측 입력)",
+        "batch_id": "B-20261105-0003",
+        "as_of": "2026-10-31"
+      },
+      {
+        "source_type": "SYNTHETIC",
+        "name": "BOM·재고·CAPA·라우팅·비용",
+        "batch_id": null,
+        "as_of": "2026-10-31"
+      }
+    ]
+  }
+}

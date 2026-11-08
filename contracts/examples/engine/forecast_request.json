@@ -1,0 +1,937 @@
+{
+  "contract_version": "forecast-input-0.1-draft",
+  "request_id": "FREQ-EXAMPLE-001",
+  "trained_until": "2016-12-31",
+  "horizon_months": 3,
+  "p50_method": "MA12",
+  "quantiles": [
+    "P50",
+    "P80",
+    "P90"
+  ],
+  "min_history_months": 12,
+  "missing_month_policy": "ZERO_FILL",
+  "random_seed": 42,
+  "rows": [
+    {
+      "product_id": "0001001",
+      "period": "2014-01",
+      "demand_qty": "400",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2014-02",
+      "demand_qty": "418",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2014-03",
+      "demand_qty": "384",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2014-04",
+      "demand_qty": "347",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2014-05",
+      "demand_qty": "373",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2014-06",
+      "demand_qty": "341",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2014-07",
+      "demand_qty": "404",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2014-08",
+      "demand_qty": "480",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2014-09",
+      "demand_qty": "370",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2014-10",
+      "demand_qty": "363",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2014-11",
+      "demand_qty": "429",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2014-12",
+      "demand_qty": "421",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2015-01",
+      "demand_qty": "406",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2015-03",
+      "demand_qty": "398",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2015-04",
+      "demand_qty": "442",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2015-05",
+      "demand_qty": "319",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2015-06",
+      "demand_qty": "373",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2015-07",
+      "demand_qty": "286",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2015-08",
+      "demand_qty": "323",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2015-09",
+      "demand_qty": "289",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2015-10",
+      "demand_qty": "386",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2015-11",
+      "demand_qty": "324",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2015-12",
+      "demand_qty": "416",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2016-01",
+      "demand_qty": "409",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2016-02",
+      "demand_qty": "389",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2016-03",
+      "demand_qty": "249",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2016-04",
+      "demand_qty": "368",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2016-05",
+      "demand_qty": "397",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2016-06",
+      "demand_qty": "407",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2016-07",
+      "demand_qty": "308",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2016-08",
+      "demand_qty": "371",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2016-09",
+      "demand_qty": "341",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2016-10",
+      "demand_qty": "351",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2016-11",
+      "demand_qty": "464",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001001",
+      "period": "2016-12",
+      "demand_qty": "746",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2014-01",
+      "demand_qty": "149",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2014-02",
+      "demand_qty": "213",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2014-03",
+      "demand_qty": "160",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2014-04",
+      "demand_qty": "189",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2014-05",
+      "demand_qty": "195",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2014-06",
+      "demand_qty": "175",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2014-07",
+      "demand_qty": "101",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2014-08",
+      "demand_qty": "130",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2014-09",
+      "demand_qty": "151",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2014-10",
+      "demand_qty": "62",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2014-11",
+      "demand_qty": "136",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2014-12",
+      "demand_qty": "132",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2015-01",
+      "demand_qty": "124",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2015-02",
+      "demand_qty": "265",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2015-03",
+      "demand_qty": "227",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2015-04",
+      "demand_qty": "133",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2015-05",
+      "demand_qty": "193",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2015-06",
+      "demand_qty": "199",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2015-07",
+      "demand_qty": "142",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2015-08",
+      "demand_qty": "151",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2015-09",
+      "demand_qty": "109",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2015-10",
+      "demand_qty": "124",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2015-11",
+      "demand_qty": "154",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2015-12",
+      "demand_qty": "105",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2016-01",
+      "demand_qty": "158",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2016-02",
+      "demand_qty": "151",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2016-03",
+      "demand_qty": "195",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2016-04",
+      "demand_qty": "133",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2016-05",
+      "demand_qty": "160",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2016-06",
+      "demand_qty": "163",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2016-07",
+      "demand_qty": "186",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2016-08",
+      "demand_qty": "166",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2016-09",
+      "demand_qty": "72",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2016-10",
+      "demand_qty": "83",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2016-11",
+      "demand_qty": "130",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001004",
+      "period": "2016-12",
+      "demand_qty": "60",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2014-01",
+      "demand_qty": "33",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2014-02",
+      "demand_qty": "38",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2014-03",
+      "demand_qty": "23",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2014-04",
+      "demand_qty": "40",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2014-05",
+      "demand_qty": "32",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2014-06",
+      "demand_qty": "28",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2014-07",
+      "demand_qty": "25",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2014-08",
+      "demand_qty": "37",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2014-09",
+      "demand_qty": "31",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2014-10",
+      "demand_qty": "34",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2014-11",
+      "demand_qty": "28",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2014-12",
+      "demand_qty": "33",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2015-01",
+      "demand_qty": "30",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2015-02",
+      "demand_qty": "27",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2015-03",
+      "demand_qty": "33",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2015-04",
+      "demand_qty": "30",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2015-05",
+      "demand_qty": "39",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2015-06",
+      "demand_qty": "40",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2015-07",
+      "demand_qty": "34",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2015-08",
+      "demand_qty": "23",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2015-09",
+      "demand_qty": "36",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2015-10",
+      "demand_qty": "32",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2015-11",
+      "demand_qty": "30",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2015-12",
+      "demand_qty": "25",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2016-01",
+      "demand_qty": "28",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2016-02",
+      "demand_qty": "31",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2016-03",
+      "demand_qty": "30",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2016-04",
+      "demand_qty": "38",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2016-05",
+      "demand_qty": "31",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2016-06",
+      "demand_qty": "37",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2016-07",
+      "demand_qty": "40",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2016-08",
+      "demand_qty": "29",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2016-09",
+      "demand_qty": "42",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2016-10",
+      "demand_qty": "35",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2016-11",
+      "demand_qty": "34",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001005",
+      "period": "2016-12",
+      "demand_qty": "28",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001003",
+      "period": "2016-05",
+      "demand_qty": "60",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001003",
+      "period": "2016-06",
+      "demand_qty": "95",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001003",
+      "period": "2016-07",
+      "demand_qty": "67",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001003",
+      "period": "2016-08",
+      "demand_qty": "79",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001003",
+      "period": "2016-09",
+      "demand_qty": "84",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001003",
+      "period": "2016-10",
+      "demand_qty": "103",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001003",
+      "period": "2016-11",
+      "demand_qty": "83",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    },
+    {
+      "product_id": "0001003",
+      "period": "2016-12",
+      "demand_qty": "71",
+      "unit": "EA",
+      "source_type": "SYNTHETIC",
+      "batch_id": "B-SYN-DEMAND-001"
+    }
+  ]
+}

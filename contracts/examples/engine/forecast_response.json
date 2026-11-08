@@ -1,0 +1,159 @@
+{
+  "contract_version": "forecast-output-0.1-draft",
+  "request_id": "FREQ-EXAMPLE-001",
+  "status": "PARTIAL",
+  "run": {
+    "run_id": "FRUN-bb3d7adf9fdb",
+    "engine": "chungpamo-engine 0.1.0 (lightgbm 4.7.0)",
+    "p50_method": "MA12",
+    "quantile_model_version": "lgbm-q/engine-0.1.0/demand-v1",
+    "trained_until": "2016-12-31",
+    "horizon_months": 3,
+    "random_seed": 42,
+    "input_digest": "sha256:bb3d7adf9fdb9a3cb6244dda7e2da0d4677e7c152018453d5c0fc3eaef891459",
+    "generated_at": "2026-11-08T13:38:23+00:00",
+    "data_classification": "SYNTHETIC"
+  },
+  "forecasts": [
+    {
+      "product_id": "0001001",
+      "target_month": "2017-01",
+      "horizon": 1,
+      "p50": "400",
+      "p80": "463.1537",
+      "p90": "495.1453",
+      "p50_method": "MA12",
+      "quantile_model_version": "lgbm-q/engine-0.1.0/demand-v1",
+      "trained_until": "2016-12-31"
+    },
+    {
+      "product_id": "0001001",
+      "target_month": "2017-02",
+      "horizon": 2,
+      "p50": "400",
+      "p80": "462.9704",
+      "p90": "496.0937",
+      "p50_method": "MA12",
+      "quantile_model_version": "lgbm-q/engine-0.1.0/demand-v1",
+      "trained_until": "2016-12-31"
+    },
+    {
+      "product_id": "0001001",
+      "target_month": "2017-03",
+      "horizon": 3,
+      "p50": "400",
+      "p80": "417.7064",
+      "p90": "447.0602",
+      "p50_method": "MA12",
+      "quantile_model_version": "lgbm-q/engine-0.1.0/demand-v1",
+      "trained_until": "2016-12-31"
+    },
+    {
+      "product_id": "0001004",
+      "target_month": "2017-01",
+      "horizon": 1,
+      "p50": "138.0833",
+      "p80": "160.4653",
+      "p90": "179.4045",
+      "p50_method": "MA12",
+      "quantile_model_version": "lgbm-q/engine-0.1.0/demand-v1",
+      "trained_until": "2016-12-31"
+    },
+    {
+      "product_id": "0001004",
+      "target_month": "2017-02",
+      "horizon": 2,
+      "p50": "138.0833",
+      "p80": "160.4653",
+      "p90": "179.4045",
+      "p50_method": "MA12",
+      "quantile_model_version": "lgbm-q/engine-0.1.0/demand-v1",
+      "trained_until": "2016-12-31"
+    },
+    {
+      "product_id": "0001004",
+      "target_month": "2017-03",
+      "horizon": 3,
+      "p50": "138.0833",
+      "p80": "159.4725",
+      "p90": "179.0356",
+      "p50_method": "MA12",
+      "quantile_model_version": "lgbm-q/engine-0.1.0/demand-v1",
+      "trained_until": "2016-12-31"
+    },
+    {
+      "product_id": "0001005",
+      "target_month": "2017-01",
+      "horizon": 1,
+      "p50": "33.5833",
+      "p80": "33.5833",
+      "p90": "34.5639",
+      "p50_method": "MA12",
+      "quantile_model_version": "lgbm-q/engine-0.1.0/demand-v1",
+      "trained_until": "2016-12-31"
+    },
+    {
+      "product_id": "0001005",
+      "target_month": "2017-02",
+      "horizon": 2,
+      "p50": "33.5833",
+      "p80": "35.7924",
+      "p90": "38.4456",
+      "p50_method": "MA12",
+      "quantile_model_version": "lgbm-q/engine-0.1.0/demand-v1",
+      "trained_until": "2016-12-31"
+    },
+    {
+      "product_id": "0001005",
+      "target_month": "2017-03",
+      "horizon": 3,
+      "p50": "33.5833",
+      "p80": "35.7924",
+      "p90": "38.0644",
+      "p50_method": "MA12",
+      "quantile_model_version": "lgbm-q/engine-0.1.0/demand-v1",
+      "trained_until": "2016-12-31"
+    }
+  ],
+  "skipped": [
+    {
+      "product_id": "0001003",
+      "reason_code": "INSUFFICIENT_HISTORY",
+      "detail": "관측 기간 8개월 (2016-05~2016-12) < 최소 12개월",
+      "observed_months": 8
+    }
+  ],
+  "adjustments": [
+    {
+      "product_id": "0001005",
+      "target_month": "2017-01",
+      "code": "QUANTILE_CROSSING_FIXED",
+      "before": {
+        "p50": "33.5833",
+        "p80": "32.6939",
+        "p90": "34.5639"
+      },
+      "after": {
+        "p50": "33.5833",
+        "p80": "33.5833",
+        "p90": "34.5639"
+      }
+    }
+  ],
+  "warnings": [
+    {
+      "code": "ZERO_FILLED_MONTH",
+      "product_id": "0001001",
+      "periods": [
+        "2015-02"
+      ],
+      "detail": "승인 데이터에 행이 없는 달을 0으로 채움 (missing_month_policy=ZERO_FILL)"
+    },
+    {
+      "code": "SMALL_TRAINING_SET",
+      "training_rows": 207,
+      "detail": "분위수 모델 학습 행 207개 (기록 기준 1만여 행보다 작음). P80·P90 신뢰도 낮음"
+    }
+  ],
+  "errors": []
+}

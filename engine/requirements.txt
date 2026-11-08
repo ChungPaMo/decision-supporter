@@ -1,0 +1,5 @@
+# 엔진 전용 의존성 (백엔드와 분리: 백엔드는 numpy·lightgbm 을 쓰지 않는다)
+lightgbm==4.7.0
+numpy==2.4.6
+pydantic==2.14.2   # 백엔드 requirements.lock 과 같은 버전
+pytest==9.2.0
