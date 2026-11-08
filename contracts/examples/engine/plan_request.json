@@ -1,0 +1,307 @@
+{
+  "contract_version": "plan-input-0.1-draft",
+  "request_id": "PREQ-20261108-BASE",
+  "as_of_date": "2026-10-31",
+  "horizon": {
+    "period_from": "2026-11",
+    "period_to": "2027-01"
+  },
+  "scenario": {
+    "scenario_id": "BASE",
+    "label": "기본",
+    "demand_multiplier": "1.0",
+    "overrides": []
+  },
+  "forecast": {
+    "run_id": "FRUN-20261108-001",
+    "rows": [
+      {
+        "product_id": "0001001",
+        "target_month": "2026-11",
+        "horizon": 1,
+        "p50": "400",
+        "p80": "445",
+        "p90": "475",
+        "p50_method": "MA12",
+        "quantile_model_version": "lgbm-q-0.1.0",
+        "trained_until": "2026-10-31"
+      },
+      {
+        "product_id": "0001001",
+        "target_month": "2026-12",
+        "horizon": 2,
+        "p50": "400",
+        "p80": "460",
+        "p90": "495",
+        "p50_method": "MA12",
+        "quantile_model_version": "lgbm-q-0.1.0",
+        "trained_until": "2026-10-31"
+      },
+      {
+        "product_id": "0001001",
+        "target_month": "2027-01",
+        "horizon": 3,
+        "p50": "400",
+        "p80": "470",
+        "p90": "510",
+        "p50_method": "MA12",
+        "quantile_model_version": "lgbm-q-0.1.0",
+        "trained_until": "2026-10-31"
+      }
+    ]
+  },
+  "products": [
+    {
+      "product_id": "0001001",
+      "product_name": "합성 히터 A",
+      "base_unit": "EA",
+      "product_type": "FINISHED",
+      "safety_stock_qty": "10"
+    },
+    {
+      "product_id": "0001002",
+      "product_name": "합성 히터 B",
+      "base_unit": "EA",
+      "product_type": "SEMI_FINISHED",
+      "safety_stock_qty": "0"
+    }
+  ],
+  "materials": [
+    {
+      "material_id": "M001",
+      "material_name": "합성 강판",
+      "base_unit": "kg",
+      "safety_stock_qty": "100"
+    },
+    {
+      "material_id": "M002",
+      "material_name": "합성 볼트",
+      "base_unit": "EA",
+      "safety_stock_qty": "0"
+    }
+  ],
+  "units": [
+    {
+      "unit_code": "EA",
+      "dimension": "COUNT",
+      "to_base_factor": "1"
+    },
+    {
+      "unit_code": "kg",
+      "dimension": "MASS",
+      "to_base_factor": "1"
+    },
+    {
+      "unit_code": "g",
+      "dimension": "MASS",
+      "to_base_factor": "0.001"
+    },
+    {
+      "unit_code": "h",
+      "dimension": "TIME",
+      "to_base_factor": "1"
+    }
+  ],
+  "boms": [
+    {
+      "bom_id": "BOM-A",
+      "product_id": "0001001",
+      "bom_version": "V1",
+      "status": "APPROVED",
+      "is_active": true,
+      "valid_from": "2026-01-01",
+      "valid_to": "2027-12-31",
+      "base_qty": "1",
+      "lines": [
+        {
+          "line_no": 1,
+          "component_type": "MATERIAL",
+          "component_id": "M001",
+          "qty_per": "2.5",
+          "unit": "kg",
+          "scrap_rate": "0.05"
+        },
+        {
+          "line_no": 2,
+          "component_type": "PRODUCT",
+          "component_id": "0001002",
+          "qty_per": "1",
+          "unit": "EA",
+          "scrap_rate": "0"
+        }
+      ]
+    },
+    {
+      "bom_id": "BOM-B",
+      "product_id": "0001002",
+      "bom_version": "V1",
+      "status": "APPROVED",
+      "is_active": true,
+      "valid_from": "2026-01-01",
+      "valid_to": "2027-12-31",
+      "base_qty": "1",
+      "lines": [
+        {
+          "line_no": 1,
+          "component_type": "MATERIAL",
+          "component_id": "M002",
+          "qty_per": "4",
+          "unit": "EA",
+          "scrap_rate": "0"
+        }
+      ]
+    }
+  ],
+  "inventory": [
+    {
+      "item_type": "PRODUCT",
+      "item_id": "0001001",
+      "as_of_date": "2026-10-31",
+      "on_hand_qty": "10",
+      "allocated_qty": "3",
+      "unit": "EA"
+    },
+    {
+      "item_type": "PRODUCT",
+      "item_id": "0001002",
+      "as_of_date": "2026-10-31",
+      "on_hand_qty": "20",
+      "allocated_qty": "0",
+      "unit": "EA"
+    },
+    {
+      "item_type": "MATERIAL",
+      "item_id": "M001",
+      "as_of_date": "2026-10-31",
+      "on_hand_qty": "3500",
+      "allocated_qty": "0",
+      "unit": "kg"
+    },
+    {
+      "item_type": "MATERIAL",
+      "item_id": "M002",
+      "as_of_date": "2026-10-31",
+      "on_hand_qty": "6000",
+      "allocated_qty": "0",
+      "unit": "EA"
+    }
+  ],
+  "capacity": [
+    {
+      "resource_id": "L1",
+      "resource_name": "조립 라인 1",
+      "regular_hours_per_day": "8",
+      "overtime_hours_per_day_max": "2"
+    },
+    {
+      "resource_id": "L2",
+      "resource_name": "부품 라인 2",
+      "regular_hours_per_day": "8",
+      "overtime_hours_per_day_max": "0"
+    }
+  ],
+  "routings": [
+    {
+      "product_id": "0001001",
+      "resource_id": "L1",
+      "run_time_per_unit_h": "0.42"
+    },
+    {
+      "product_id": "0001002",
+      "resource_id": "L2",
+      "run_time_per_unit_h": "0.1"
+    }
+  ],
+  "calendar": {
+    "working_days": {
+      "2026-11": 21,
+      "2026-12": 22,
+      "2027-01": 20
+    },
+    "source": "평일 수 − 공휴일(12/25, 1/1). 회사 달력 확인 전 가정"
+  },
+  "costs": {
+    "currency": "KRW",
+    "material_unit_cost": [
+      {
+        "material_id": "M001",
+        "unit": "kg",
+        "value": "3000"
+      },
+      {
+        "material_id": "M002",
+        "unit": "EA",
+        "value": "50"
+      }
+    ],
+    "resource_hourly_cost": [
+      {
+        "resource_id": "L1",
+        "regular": "30000",
+        "overtime": "45000"
+      },
+      {
+        "resource_id": "L2",
+        "regular": "20000",
+        "overtime": null
+      }
+    ],
+    "holding_cost_per_unit_month": [
+      {
+        "product_id": "0001001",
+        "value": "2000"
+      },
+      {
+        "product_id": "0001002",
+        "value": "500"
+      }
+    ],
+    "source": "합성 값 (SYNTHETIC). 실제 단가 아님"
+  },
+  "policy": {
+    "plans": [
+      {
+        "plan_id": "PLAN-BASE",
+        "plan_type": "BASELINE",
+        "demand_quantile": "P50",
+        "allow_overtime": true,
+        "leveling": false
+      },
+      {
+        "plan_id": "PLAN-STABLE",
+        "plan_type": "STABLE",
+        "demand_quantile": "P80",
+        "allow_overtime": true,
+        "leveling": false
+      },
+      {
+        "plan_id": "PLAN-COST",
+        "plan_type": "COST_SAVING",
+        "demand_quantile": "P50",
+        "allow_overtime": false,
+        "leveling": true
+      }
+    ],
+    "include_product_safety_stock": true,
+    "include_material_safety_stock": true,
+    "safety_stock_strength": "SOFT",
+    "demand_strength": "HARD",
+    "integer_units": [
+      "EA"
+    ]
+  },
+  "evidence": [
+    {
+      "source_type": "PUBLIC_DEMAND",
+      "name": "월별 수요 (예측 입력)",
+      "batch_id": "B-20261105-0003",
+      "as_of": "2026-10-31"
+    },
+    {
+      "source_type": "SYNTHETIC",
+      "name": "BOM·재고·CAPA·라우팅·비용",
+      "batch_id": null,
+      "as_of": "2026-10-31"
+    }
+  ]
+}
