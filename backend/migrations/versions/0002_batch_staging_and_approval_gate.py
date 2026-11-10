@@ -102,6 +102,9 @@ WHERE b.status = 'APPROVED' AND b.blocking_error_count = 0 AND b.entity = 'month
 
 
 def upgrade() -> None:
+    # PostgreSQL은 뷰가 참조하는 열의 타입 변경을 거부한다.
+    # 동일 트랜잭션 끝에서 아래 FORECAST_INPUT_VIEW로 재생성한다.
+    op.execute("DROP VIEW v_forecast_input_monthly_demand")
     # --- 컬럼 (G6, G7) ---
     op.alter_column("import_batch", "status", type_=sa.String(20), server_default="MAPPING_HOLD")
     op.add_column("import_batch", sa.Column("entity", sa.String(30), nullable=False, server_default="monthly_demand"))
@@ -160,6 +163,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.execute("DROP VIEW v_forecast_input_monthly_demand")
     op.execute("DROP TRIGGER IF EXISTS trg_batch_record_count ON import_batch")
     for t in GOVERNED:
         op.execute(f"DROP TRIGGER IF EXISTS trg_{t}_no_delete ON {t}")
@@ -189,11 +193,6 @@ BEGIN
   END IF;
   RETURN NEW;
 END $$""")
-    op.execute("""
-CREATE OR REPLACE VIEW v_forecast_input_monthly_demand AS
-SELECT d.product_id, d.period, d.demand_qty, d.unit, b.source_type, b.batch_id
-FROM monthly_demand d JOIN import_batch b ON b.batch_id = d.batch_id
-WHERE b.status = 'APPROVED' AND b.blocking_error_count = 0""")
     for c in ("ck_batch_entity", "ck_batch_rejected_meta", "ck_batch_errors_counted", "ck_batch_ready_no_errors", "ck_batch_approved_count", "ck_status_batchstatus"):
         op.drop_constraint(c, "import_batch")
     op.execute("UPDATE import_batch SET status = 'UPLOADED' WHERE status IN ('MAPPING_HOLD', 'HAS_ERRORS')")
@@ -203,3 +202,8 @@ WHERE b.status = 'APPROVED' AND b.blocking_error_count = 0""")
               "warning_count", "sheet_filter", "column_overrides", "default_unit", "created_by", "entity"):
         op.drop_column("import_batch", c)
     op.alter_column("import_batch", "status", type_=sa.String(12), server_default="UPLOADED")
+    op.execute("""
+CREATE VIEW v_forecast_input_monthly_demand AS
+SELECT d.product_id, d.period, d.demand_qty, d.unit, b.source_type, b.batch_id
+FROM monthly_demand d JOIN import_batch b ON b.batch_id = d.batch_id
+WHERE b.status = 'APPROVED' AND b.blocking_error_count = 0""")

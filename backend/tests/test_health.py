@@ -1,6 +1,5 @@
 from fastapi.testclient import TestClient
 
-from app import db
 from app.main import app
 
 client = TestClient(app)
@@ -8,9 +7,11 @@ client = TestClient(app)
 
 def test_health_reports_db_unavailable_without_leaking_details(monkeypatch):
     """DB 에 닿지 않으면 503 + degraded. 접속 정보·예외 문구는 응답에 없어야 한다. (DB 불필요)"""
-    from sqlalchemy import create_engine
-    bad = create_engine("postgresql+psycopg://u:secret_pw@127.0.0.1:1/x", connect_args={"connect_timeout": 1})
-    monkeypatch.setattr("app.api.health.get_engine", lambda: bad)
+    class UnavailableEngine:
+        def connect(self):
+            raise RuntimeError("secret_pw: simulated DB failure")
+
+    monkeypatch.setattr("app.api.health.get_engine", UnavailableEngine)
     r = client.get("/health")
     assert r.status_code == 503
     assert r.json()["status"] == "degraded"
@@ -18,9 +19,10 @@ def test_health_reports_db_unavailable_without_leaking_details(monkeypatch):
     assert "secret_pw" not in r.text
 
 
-def test_health_ok_with_real_db(test_engine):
+def test_health_ok_with_real_db(test_engine, monkeypatch):
     """전용 PostgreSQL 컨테이너가 떠 있을 때만 실행."""
-    db.get_engine.cache_clear()
+    assert test_engine.url.database == "chungpamo_test"
+    monkeypatch.setattr("app.api.health.get_engine", lambda: test_engine)
     r = client.get("/health")
     assert r.status_code == 200
     body = r.json()

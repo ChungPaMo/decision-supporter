@@ -1,7 +1,7 @@
 """DB 수준 안전장치 시험 (마이그레이션 0004 까지 적용한 DB 필요).
 
-⚠ 이 파일의 어떤 테스트도 아직 실행·통과한 적이 없다. Docker 가 없는 PC 에서는 skip 되며, Docker 개발 PC 에서
-`docker compose up -d db` + `alembic upgrade head` 후 실행해 skip 이 0 이고 모두 통과해야 검증된 것이다.
+2026-11-10 PostgreSQL 16.6에서 실제 통과했다 (검증 보고서 참고).
+DB가 없는 PC에서는 skip이며 그 실행을 DB 검증 성공으로 간주하지 않는다.
 """
 import uuid
 
@@ -49,9 +49,10 @@ def _fails(conn, match=None, exc=DBAPIError):
             return self_.raises.__enter__()
 
         def __exit__(self_, *a):
-            ok = self_.raises.__exit__(*a)
-            self_.sp.rollback()
-            return ok
+            try:
+                return self_.raises.__exit__(*a)
+            finally:
+                self_.sp.rollback()
     return _Ctx()
 
 
@@ -62,8 +63,9 @@ def test_unit_seed(conn):
 # ---------------------------------------------------------------- 상태 전이 (G1, G2, G6)
 def test_new_batch_cannot_start_final(conn):
     for st in ("APPROVED", "REJECTED"):
-        with _fails(conn, "cannot start in a final state"):
+        with _fails(conn, "cannot start in final state") as error:
             _batch(conn, st)
+        assert error.value.orig.sqlstate == "23514"
 
 
 def test_ready_requires_zero_errors_and_has_errors_requires_some(conn):
@@ -206,10 +208,12 @@ def test_bom_lines_require_bom_batch_and_are_counted(conn):
     _product(conn, _approved_batch(conn, entity="product"))
     conn.execute(text("INSERT INTO material (material_id, material_name, base_unit, batch_id) VALUES ('M1', 'x', 'kg', :b)"),
                  dict(b=_approved_batch(conn, entity="material")))
-    wrong = _approved_batch(conn, entity="inventory")
     head = ("INSERT INTO bom_header (bom_id, product_id, bom_version, status, is_active, valid_from, batch_id) "
             "VALUES ('B1', 'FG001', 'V1', 'APPROVED', true, '2026-01-01', :b)")
     with _fails(conn, "matching entity"):
+        # 잘못된 배치의 승인도 savepoint 안에서 취소한다. 그렇지 않으면
+        # 아래 deferred count 검사가 이 빈 inventory 배치 때문에 실패한다.
+        wrong = _approved_batch(conn, entity="inventory")
         conn.execute(text(head), dict(b=wrong))
     bom = _approved_batch(conn, n=1, entity="bom")
     conn.execute(text(head), dict(b=bom))
@@ -225,6 +229,44 @@ def test_inventory_item_must_be_registered(conn):
     conn.execute(text(ins), dict(t="PRODUCT", i="FG001", b=inv))
     with _fails(conn, "not registered", exc=IntegrityError):
         conn.execute(text(ins), dict(t="MATERIAL", i="FG001", b=inv))           # 같은 코드라도 자재로는 미등록
+
+
+@pytest.mark.parametrize("entity", ["product", "material"])
+def test_master_rejects_unknown_unit(conn, entity):
+    batch = _approved_batch(conn, entity=entity)
+    with _fails(conn, exc=IntegrityError) as error:
+        conn.execute(text(f"INSERT INTO {entity} ({entity}_id, {entity}_name, base_unit, batch_id) "
+                          "VALUES ('UNKNOWN-UNIT', 'x', 'NO_UNIT', :b)"), {"b": batch})
+    assert error.value.orig.sqlstate == "23503"
+
+
+def test_bom_header_rejects_unknown_product(conn):
+    batch = _approved_batch(conn, entity="bom")
+    with _fails(conn, exc=IntegrityError) as error:
+        conn.execute(text("INSERT INTO bom_header (bom_id, product_id, bom_version, status, is_active, valid_from, batch_id) "
+                          "VALUES ('B1', 'NO_PRODUCT', 'V1', 'APPROVED', true, '2026-01-01', :b)"), {"b": batch})
+    assert error.value.orig.sqlstate == "23503"
+
+
+@pytest.mark.parametrize("kind,column", [("MATERIAL", "component_material_id"), ("PRODUCT", "component_product_id")])
+def test_bom_line_rejects_unknown_component(conn, kind, column):
+    _product(conn, _approved_batch(conn, entity="product"))
+    batch = _approved_batch(conn, entity="bom")
+    conn.execute(text("INSERT INTO bom_header (bom_id, product_id, bom_version, status, is_active, valid_from, batch_id) "
+                      "VALUES ('B1', 'FG001', 'V1', 'APPROVED', true, '2026-01-01', :b)"), {"b": batch})
+    with _fails(conn, exc=IntegrityError) as error:
+        conn.execute(text(f"INSERT INTO bom_line (bom_id, line_no, component_type, {column}, qty_per, unit, batch_id) "
+                          "VALUES ('B1', 1, :kind, 'NO_COMPONENT', 1, 'EA', :b)"), {"kind": kind, "b": batch})
+    assert error.value.orig.sqlstate == "23503"
+
+
+@pytest.mark.parametrize("kind", ["PRODUCT", "MATERIAL"])
+def test_inventory_rejects_unknown_item_of_either_type(conn, kind):
+    batch = _approved_batch(conn, entity="inventory")
+    with _fails(conn, exc=IntegrityError) as error:
+        conn.execute(text("INSERT INTO inventory (item_type, item_id, as_of_date, on_hand_qty, unit, batch_id) "
+                          "VALUES (:kind, 'NO_ITEM', '2026-10-31', 1, 'EA', :b)"), {"kind": kind, "b": batch})
+    assert error.value.orig.sqlstate == "23503"
 
 
 def test_forecast_quantile_order_and_period_format(conn):

@@ -1,5 +1,5 @@
-"""PostgreSQL 저장소. ⚠ 미검증: 이 파일의 SQL 은 어떤 DB 에서도 실행해 보지 않았다 (개발 PC 에 Docker 가 없음).
-Docker 개발 PC 에서 마이그레이션 0004 까지 적용 후 tests/test_sql_repository.py 로 검증하기 전에는 동작을 보장하지 않는다.
+"""PostgreSQL 저장소. 2026-11-10 PostgreSQL 16.6에서 합성 입력으로 실제 검증했다.
+범위와 남은 제약은 docs/postgresql_integration_verification_20261110.md 참고 (운영 검증은 아님).
 
 트랜잭션 경계: transaction() 한 번 = engine.begin() 한 번. 예외가 나가면 SQLAlchemy 가 롤백한다.
 승인 게이트의 최종 강제는 DB 트리거(migrations 0002)가 한다: 이 클래스가 규칙을 어겨도 DB 가 거부한다.
