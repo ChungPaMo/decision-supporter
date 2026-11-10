@@ -5,12 +5,14 @@
 """
 import json
 from pathlib import Path
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
 from app.api.batches import get_service
 from app.batches.service import BatchService
 from app.main import app
+from app.config import Settings
 from tests.fakes import InMemoryBatchRepository
 
 EXAMPLES = Path(__file__).resolve().parents[1] / "contracts" / "examples"
@@ -105,7 +107,9 @@ def build_examples() -> dict[str, str]:
     finally:
         app.dependency_overrides.clear()
 
-    get("28_error_persistence_disabled_default", "/batches")               # 기본 설정의 실제 응답
+    # 로컬 .env가 postgres여도 '저장 비활성' 예시는 기본 설정으로 생성한다.
+    with patch("app.api.batches.get_settings", return_value=Settings(_env_file=None, persistence="disabled")):
+        get("28_error_persistence_disabled_default", "/batches")
     r.save("29_preview_without_persistence", {"method": "POST", "path": "/ingest/preview", "multipart": {"file": "sample_products.csv", "entity": "product"}},
            c.post("/ingest/preview", files={"file": ("sample_products.csv", _sample("sample_products.csv"))}, data={"entity": "product"}))
     return {f"{k}.json": json.dumps(v, ensure_ascii=False, indent=2) + "\n" for k, v in r.files.items()}

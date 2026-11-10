@@ -5,6 +5,8 @@ from fastapi.responses import JSONResponse
 
 from app.api.batches import router as batches_router
 from app.api.exports import router as exports_router
+from app.api.forecasts import router as forecasts_router
+from app.api.forecasts import history_router as forecast_history_router
 from app.api.health import router as health_router
 from app.api.ingest import router as ingest_router
 from app.config import Settings, get_settings
@@ -16,6 +18,8 @@ app.include_router(health_router)
 app.include_router(ingest_router)
 app.include_router(batches_router)
 app.include_router(exports_router)
+app.include_router(forecasts_router)
+app.include_router(forecast_history_router)
 
 
 def configure_cors(target: FastAPI, settings: Settings) -> None:

@@ -8,11 +8,15 @@ from pydantic import TypeAdapter
 
 from app import contracts as c
 from app.exports.contract import EXPORT_CONTRACT_VERSION, PlanExportRequest
+from app.forecast.schemas import DevForecastRequest, ForecastResponse
+from app.forecast.runs_schemas import ForecastRunRequest, ForecastRunReply, ForecastHistory, ForecastExecution
 
 ROWS = ["UnitRow", "ProductRow", "MaterialRow", "MonthlyDemandRow", "SalesOrderRow", "BomHeaderRow", "BomLineRow",
         "InventoryRow", "CapacityRow", "ForecastRow"]
 OUT = Path(__file__).resolve().parents[1] / "contracts" / "data_contract_v1.schema.json"
 PLAN_OUT = OUT.parent / "plan_export_draft.schema.json"
+FORECAST_OUT = OUT.parent / "dev_forecast_draft.schema.json"
+FORECAST_RUN_OUT = OUT.parent / "forecast_run_v1.schema.json"
 
 
 def build() -> str:
@@ -26,7 +30,22 @@ def build_plan() -> str:
     return json.dumps(schema, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 
+def build_forecast() -> str:
+    schema = {"status": "DEVELOPMENT_ONLY", "request": DevForecastRequest.model_json_schema(),
+              "response": ForecastResponse.model_json_schema()}
+    return json.dumps(schema, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+
+
+def build_forecast_run() -> str:
+    schema = {"contract_version": "forecast-run-0.1", "request": ForecastRunRequest.model_json_schema(),
+              "reply": ForecastRunReply.model_json_schema(), "history": ForecastHistory.model_json_schema(),
+              "detail": ForecastExecution.model_json_schema()}
+    return json.dumps(schema, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+
+
 if __name__ == "__main__":
     OUT.write_text(build(), encoding="utf-8", newline="\n")
     PLAN_OUT.write_text(build_plan(), encoding="utf-8", newline="\n")
+    FORECAST_OUT.write_text(build_forecast(), encoding="utf-8", newline="\n")
+    FORECAST_RUN_OUT.write_text(build_forecast_run(), encoding="utf-8", newline="\n")
     print("wrote", OUT, PLAN_OUT)

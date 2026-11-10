@@ -58,4 +58,4 @@ def test_migration_chain_is_linear():
     for f in versions.glob("*.py"):
         t = f.read_text(encoding="utf-8")
         revs[re.search(r'^revision = "(\w+)"', t, re.M).group(1)] = re.search(r'^down_revision = (.+)$', t, re.M).group(1).strip('"')
-    assert revs == {"0001": "None", "0002": "0001", "0003": "0002", "0004": "0003"}
+    assert revs == {"0001": "None", "0002": "0001", "0003": "0002", "0004": "0003", "0005": "0004"}

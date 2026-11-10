@@ -1,0 +1,4 @@
+# 저장소 루트에서 실행: python -m pip install -r backend/requirements-forecast.txt
+-r requirements.txt
+-r ../engine/requirements.txt
+-e .

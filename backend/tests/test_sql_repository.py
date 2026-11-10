@@ -1,16 +1,19 @@
 """SqlBatchRepository + BatchService 통합 시험 (DB 필요).
 
-⚠ 한 번도 실행·통과한 적 없다. Docker 가 없는 PC 에서는 skip. Docker 개발 PC 에서 마이그레이션 0004 까지 적용 후 실행해 검증한다.
+2026-11-10 PostgreSQL 16.6에서 실제 통과했다. DB가 없는 PC에서는 skip이며 성공으로 간주하지 않는다.
 이 시험은 실제 커밋을 하므로 테스트 DB(chungpamo_test)에서만 실행되고, 끝나면 테이블을 TRUNCATE 한다.
 """
 from decimal import Decimal
+from concurrent.futures import ThreadPoolExecutor
+from threading import Event, local
+import time
 
 import pytest
 from sqlalchemy import text
 
 from app.batches.repository import DemandRow, RepositoryError
 from app.batches.service import BatchService
-from app.batches.sql_repository import SqlBatchRepository
+from app.batches.sql_repository import SqlBatchRepository, SqlBatchTx
 from app.errors import ApiError, ErrorCode
 
 HDR = "제품코드,제품명,기준월,수요량,단위\n"
@@ -30,7 +33,7 @@ def svc(test_engine):
 
 def _clean(engine):
     with engine.begin() as c:
-        c.execute(text("TRUNCATE inventory, bom_line, bom_header, material, monthly_demand, product, batch_source_file, import_batch CASCADE"))
+        c.execute(text("TRUNCATE forecast_run, inventory, bom_line, bom_header, material, monthly_demand, product, batch_source_file, import_batch CASCADE"))
 
 
 def test_upload_approve_query_roundtrip(svc, test_engine):
@@ -123,3 +126,54 @@ def test_failed_insert_rolls_back_the_whole_approval(svc, test_engine):
             tx.insert_monthly_demand(b.batch_id, [DemandRow("NO_SUCH_PRODUCT", "2026-01", Decimal(1), "EA")])
     after = svc.get_batch(b.batch_id)
     assert after.status == "READY_FOR_APPROVAL" and after.approved_by is None
+
+
+def test_concurrent_approval_waits_for_row_lock_and_writes_once(svc, test_engine, monkeypatch):
+    """두 실제 연결의 잠금 대기를 관측하고 후발 승인이 409로 끝나는지 확인한다."""
+    batch = svc.create_batch("concurrent.csv", GOOD)
+    locked, attempting, release = Event(), Event(), Event()
+    worker = local()
+    pids = {}
+    original = SqlBatchTx.get_batch
+
+    def get_batch(tx, batch_id, lock=False):
+        role = getattr(worker, "role", None)
+        if lock and role == "second":
+            pids["pid"] = tx.c.execute(text("SELECT pg_backend_pid()")).scalar_one()
+            attempting.set()
+        result = original(tx, batch_id, lock)
+        if lock and role == "first":
+            locked.set()
+            assert release.wait(10), "첫 승인 잠금 해제 시간 초과"
+        return result
+
+    monkeypatch.setattr(SqlBatchTx, "get_batch", get_batch)
+
+    def approve(role):
+        worker.role = role
+        return svc.approve(batch.batch_id, approved_by="REVIEWER-01", expected_result_digest=batch.result_digest)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(approve, "first")
+        try:
+            assert locked.wait(5)
+            second = pool.submit(approve, "second")
+            assert attempting.wait(5)
+            deadline = time.monotonic() + 5
+            blocked = False
+            while time.monotonic() < deadline:
+                with test_engine.connect() as c:
+                    blocked = c.execute(text("SELECT cardinality(pg_blocking_pids(:pid)) > 0"), pids).scalar_one()
+                if blocked:
+                    break
+                time.sleep(0.01)
+            assert blocked, "두 번째 PostgreSQL 연결의 실제 잠금 대기를 확인하지 못함"
+        finally:
+            release.set()
+        assert first.result(timeout=5).status == "APPROVED"
+        with pytest.raises(ApiError) as error:
+            second.result(timeout=5)
+        assert error.value.status == 409 and error.value.code == ErrorCode.ALREADY_APPROVED
+    with test_engine.connect() as c:
+        assert c.execute(text("SELECT count(*) FROM monthly_demand WHERE batch_id=:id"),
+                         {"id": batch.batch_id}).scalar_one() == 3

@@ -9,6 +9,8 @@
 
 ## 1. 흐름과 경계
 
+2026-11-10: 합성 JSON용 `POST /dev/forecasts`는 유지하며, 별도로 승인 수요 → 예측 실행·저장·이력 조회의 `POST/GET /forecasts`를 구현했다([정식 API 계약](api_contract_forecast_runs.md)). 계획 엔진 연결은 아직 없다.
+
 ```
 v_forecast_input_monthly_demand ──► [예측] forecast_request → forecast_response (ForecastRow[])
                                                                    │  (백엔드가 demand_forecast 에 저장)

@@ -2,6 +2,8 @@
 
 DB에 접근하지 않는 순수 Python 모듈이다 (입력 JSON → 출력 JSON). 계약·계산 규칙: [docs/engine_forecast_plan_contract.md](../docs/engine_forecast_plan_contract.md)
 
+FastAPI의 정식 `POST /forecasts`는 승인 DB 수요를 JSON으로 구성해 이 모듈을 호출하고 실행·출처·결과를 저장한다. DB 접근은 백엔드가 담당한다. `/dev/forecasts`는 별도의 합성 JSON 전용 경로다. [실행·중복·오류 계약](../docs/api_contract_forecast_runs.md) 참고.
+
 | 모듈 | 상태 |
 |---|---|
 | `engine.forecast` 월별 수요예측 P50/P80/P90 | 구현 (계약 §3, §6.1) |

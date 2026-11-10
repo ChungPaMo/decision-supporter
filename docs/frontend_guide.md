@@ -8,17 +8,21 @@ React 화면을 별도 프로젝트로 만드는 담당자를 위한 문서다. 
 
 ## 1. 지금 동작하는 것과 아닌 것
 
-**먼저 읽어 주세요.** PostgreSQL 저장 경로는 아직 실제 DB 에서 실행된 적이 없다.
+PostgreSQL 16.6에서 마이그레이션 0005 및 실제 등록·승인·예측 저장 경로를 검증했다. 기본값은 disabled이며 이 PC의 로컬 실행 설정은 postgres다.
 
 | 기능 | 기본 설정에서 | 비고 |
 |---|---|---|
 | `/health` | 동작 | DB 가 없으면 503 `degraded` 가 정상 |
 | `POST /ingest/preview` | **동작** | 저장 없는 검증. 기존 제품 대조 없음 (`master_data_checked: false`) |
 | `POST /exports/plans/xlsx` | **동작** | DEMO/UNVERIFIED 출력. 공식 문서 아님 |
-| `/batches*`, `/products`, `/materials`, `/boms`, `/inventory`, `/demand/monthly` | **501** `PERSISTENCE_DISABLED` | 서비스 로직은 테스트 전용 인메모리 저장소로만 검증. 영구 저장은 미검증 |
-| 예측, 계획 생성·저장, 승인된 계획의 정식 출력, 로그인·권한 | **없음** | 구현 전 |
+| `/batches*`, `/products`, `/materials`, `/boms`, `/inventory`, `/demand/monthly` | disabled면 **501**, postgres면 실제 DB 사용 | 업로드·재검증·승인·반려·조회 검증 완료 |
+| `POST /dev/forecasts` | 합성 JSON → 실제 예측 엔진 | 개발용, 저장·승인 수요 조회 없음. [예측 API 계약](api_contract_forecasts.md) |
+| `POST /forecasts`, `GET /forecasts*` | postgres 설정에서 실제 실행·저장·이력 조회 | [승인 수요 예측 계약](api_contract_forecast_runs.md) |
+| 계획 생성·저장, 승인된 계획의 정식 출력, 로그인·권한 | **없음** | 구현 전 |
 
-따라서 지금은 `/ingest/preview` 와 `/exports/plans/xlsx` 만 실제 서버로 붙일 수 있다. 나머지는 §7 의 응답 예시로 화면을 만들고, DB 검증 후 연결한다. 501 은 "준비 안 됨" 화면으로 처리한다.
+등록 화면은 실제 `/batches` API를 사용한다. 서버 실패 시 Fixture로 전환하지 않는다. 새로고침 시 페이지 단위로 전체 배치 목록을 읽고 GET 상세를 조회해 서버 상태를 복원한다. 재검증은 서버 version과 전체 settings를, 승인은 화면에서 확인한 result_digest를 보낸다. 409면 최신 결과를 다시 조회하고 사용자가 검토 후 재요청한다.
+
+예측 화면은 정식 `/forecasts` API를 사용한다. `#forecast` 경로와 선택 실행 ID만 브라우저에 남기고 새로고침 시 서버에서 결과를 읽는다. 실행 응답은 HTTP보다 execution.status를 함께 확인하며 INPUT_INVALID/FAILED의 저장된 이력도 표시한다. 계획 화면은 실제 예측과 연결되지 않은 별도 예시다.
 
 ## 2. 서버 실행
 
@@ -34,6 +38,10 @@ cd backend
 | 메서드 | 경로 | 요청 | 성공 | 예시 파일 |
 |---|---|---|---|---|
 | GET | `/health` | | 200 | |
+| POST | `/dev/forecasts` | 합성 예측 요청 JSON | 200 또는 엔진 INPUT_INVALID 422 | `contracts/examples/engine/forecast_*.json` |
+| POST | `/forecasts` | 기준일·기간·P50 방식·최소 이력·시드 | 새 실행 201 / 재사용 200 / 판정·실행 오류 422·500·503 | [정식 예측 계약](api_contract_forecast_runs.md) |
+| GET | `/forecasts` | `limit`, `offset` | 200 실행 이력 페이지 | |
+| GET | `/forecasts/{execution_id}` | UUID | 200 상세·출처·결과 | |
 | POST | `/ingest/preview` | multipart: `file`, `entity`, `default_unit`, `column_overrides`, `sheet` | 200 | `29_preview_without_persistence` |
 | POST | `/batches` | multipart: `file`, `entity`, `default_unit`, `column_overrides`, `sheet`, `source_type`, `source_note`, `created_by` | 201 | `01`, `03`, `05`, `07`, `09`, `13` |
 | GET | `/batches` | `status`, `limit`, `offset` | 200 | `20_list_batches` |
@@ -180,6 +188,9 @@ CORS_ALLOW_ORIGINS=http://localhost:5173
 - multipart 업로드는 `Content-Type` 을 직접 지정하지 말고 브라우저에 맡긴다.
 
 ## 9. 확정 전 사항
+
+- 개발용 예측 의존성 누락은 `FORECAST_ENGINE_UNAVAILABLE`(503), 실행/출력 오류는 `FORECAST_ENGINE_ERROR`(500)다. 세부 예외는 응답에 노출하지 않는다.
+- 정식 예측 동시 중복은 `FORECAST_IN_PROGRESS`(409), 없는 실행은 `FORECAST_NOT_FOUND`(404)다. 정식 POST는 오류 HTTP라도 execution을 담아 저장된 FAILED/INPUT_INVALID 이력을 반환할 수 있다. [상태별 처리](api_contract_forecast_runs.md)를 따른다.
 
 - Excel 입력 JSON 은 초안이다: [api_contract_exports.md](api_contract_exports.md) §6.
 - `GET /boms`, `/inventory`, `/demand/monthly` 는 계획 담당과 확정 전인 제안 계약이다.

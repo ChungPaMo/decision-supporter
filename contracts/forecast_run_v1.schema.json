@@ -1,0 +1,1391 @@
+{
+  "contract_version": "forecast-run-0.1",
+  "detail": {
+    "$defs": {
+      "ForecastAdjustment": {
+        "additionalProperties": true,
+        "properties": {
+          "after": {
+            "$ref": "#/$defs/Quantiles"
+          },
+          "before": {
+            "$ref": "#/$defs/Quantiles"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "target_month": {
+            "title": "Target Month",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "target_month",
+          "code",
+          "before",
+          "after"
+        ],
+        "title": "ForecastAdjustment",
+        "type": "object"
+      },
+      "ForecastFailure": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ForecastFailure",
+        "type": "object"
+      },
+      "ForecastIssue": {
+        "additionalProperties": true,
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "loc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Loc"
+          }
+        },
+        "required": [
+          "code",
+          "detail"
+        ],
+        "title": "ForecastIssue",
+        "type": "object"
+      },
+      "ForecastResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "adjustments": {
+            "items": {
+              "$ref": "#/$defs/ForecastAdjustment"
+            },
+            "title": "Adjustments",
+            "type": "array"
+          },
+          "contract_version": {
+            "const": "forecast-output-0.1-draft",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/$defs/ForecastIssue"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "forecasts": {
+            "items": {
+              "$ref": "#/$defs/ForecastValue"
+            },
+            "title": "Forecasts",
+            "type": "array"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ForecastRun"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "skipped": {
+            "items": {
+              "$ref": "#/$defs/SkippedProduct"
+            },
+            "title": "Skipped",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "OK",
+              "PARTIAL",
+              "DATA_INSUFFICIENT",
+              "INPUT_INVALID"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/$defs/ForecastWarning"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "contract_version",
+          "request_id",
+          "status",
+          "run",
+          "forecasts",
+          "skipped",
+          "adjustments",
+          "warnings",
+          "errors"
+        ],
+        "title": "ForecastResponse",
+        "type": "object"
+      },
+      "ForecastRun": {
+        "additionalProperties": true,
+        "properties": {
+          "data_classification": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Classification"
+          },
+          "engine": {
+            "title": "Engine",
+            "type": "string"
+          },
+          "generated_at": {
+            "title": "Generated At",
+            "type": "string"
+          },
+          "horizon_months": {
+            "title": "Horizon Months",
+            "type": "integer"
+          },
+          "input_digest": {
+            "title": "Input Digest",
+            "type": "string"
+          },
+          "p50_method": {
+            "enum": [
+              "MA12",
+              "LGBM_L1"
+            ],
+            "title": "P50 Method",
+            "type": "string"
+          },
+          "quantile_model_version": {
+            "title": "Quantile Model Version",
+            "type": "string"
+          },
+          "random_seed": {
+            "title": "Random Seed",
+            "type": "integer"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "trained_until": {
+            "title": "Trained Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "engine",
+          "p50_method",
+          "quantile_model_version",
+          "trained_until",
+          "horizon_months",
+          "random_seed",
+          "input_digest",
+          "generated_at",
+          "data_classification"
+        ],
+        "title": "ForecastRun",
+        "type": "object"
+      },
+      "ForecastRunRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "forecast-run-0.1",
+            "default": "forecast-run-0.1",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "horizon_months": {
+            "default": 3,
+            "maximum": 12,
+            "minimum": 1,
+            "title": "Horizon Months",
+            "type": "integer"
+          },
+          "min_history_months": {
+            "default": 12,
+            "maximum": 120,
+            "minimum": 12,
+            "title": "Min History Months",
+            "type": "integer"
+          },
+          "p50_method": {
+            "default": "MA12",
+            "enum": [
+              "MA12",
+              "LGBM_L1"
+            ],
+            "title": "P50 Method",
+            "type": "string"
+          },
+          "random_seed": {
+            "default": 42,
+            "maximum": 2147483647,
+            "minimum": 0,
+            "title": "Random Seed",
+            "type": "integer"
+          },
+          "trained_until": {
+            "format": "date",
+            "title": "Trained Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trained_until"
+        ],
+        "title": "ForecastRunRequest",
+        "type": "object"
+      },
+      "ForecastValue": {
+        "additionalProperties": true,
+        "properties": {
+          "horizon": {
+            "title": "Horizon",
+            "type": "integer"
+          },
+          "p50": {
+            "title": "P50",
+            "type": "string"
+          },
+          "p50_method": {
+            "title": "P50 Method",
+            "type": "string"
+          },
+          "p80": {
+            "title": "P80",
+            "type": "string"
+          },
+          "p90": {
+            "title": "P90",
+            "type": "string"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "quantile_model_version": {
+            "title": "Quantile Model Version",
+            "type": "string"
+          },
+          "target_month": {
+            "title": "Target Month",
+            "type": "string"
+          },
+          "trained_until": {
+            "title": "Trained Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "target_month",
+          "horizon",
+          "p50",
+          "p80",
+          "p90",
+          "p50_method",
+          "quantile_model_version",
+          "trained_until"
+        ],
+        "title": "ForecastValue",
+        "type": "object"
+      },
+      "ForecastWarning": {
+        "additionalProperties": true,
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "detail"
+        ],
+        "title": "ForecastWarning",
+        "type": "object"
+      },
+      "InputBatchSnapshot": {
+        "properties": {
+          "approved_at": {
+            "format": "date-time",
+            "title": "Approved At",
+            "type": "string"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "batch_version": {
+            "title": "Batch Version",
+            "type": "integer"
+          },
+          "result_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Digest"
+          },
+          "source_sha256": {
+            "title": "Source Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "batch_id",
+          "batch_version",
+          "source_sha256",
+          "result_digest",
+          "approved_at"
+        ],
+        "title": "InputBatchSnapshot",
+        "type": "object"
+      },
+      "Quantiles": {
+        "additionalProperties": true,
+        "properties": {
+          "p50": {
+            "title": "P50",
+            "type": "string"
+          },
+          "p80": {
+            "title": "P80",
+            "type": "string"
+          },
+          "p90": {
+            "title": "P90",
+            "type": "string"
+          }
+        },
+        "required": [
+          "p50",
+          "p80",
+          "p90"
+        ],
+        "title": "Quantiles",
+        "type": "object"
+      },
+      "SkippedProduct": {
+        "additionalProperties": true,
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "observed_months": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed Months"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "reason_code": {
+            "title": "Reason Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "reason_code",
+          "detail",
+          "observed_months"
+        ],
+        "title": "SkippedProduct",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "created_at": {
+        "format": "date-time",
+        "title": "Created At",
+        "type": "string"
+      },
+      "dedup_key": {
+        "title": "Dedup Key",
+        "type": "string"
+      },
+      "execution_id": {
+        "format": "uuid",
+        "title": "Execution Id",
+        "type": "string"
+      },
+      "failure": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ForecastFailure"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "finished_at": {
+        "format": "date-time",
+        "title": "Finished At",
+        "type": "string"
+      },
+      "forecast_count": {
+        "title": "Forecast Count",
+        "type": "integer"
+      },
+      "input_batches": {
+        "items": {
+          "$ref": "#/$defs/InputBatchSnapshot"
+        },
+        "title": "Input Batches",
+        "type": "array"
+      },
+      "input_digest": {
+        "title": "Input Digest",
+        "type": "string"
+      },
+      "input_row_count": {
+        "title": "Input Row Count",
+        "type": "integer"
+      },
+      "parameters": {
+        "$ref": "#/$defs/ForecastRunRequest"
+      },
+      "quantile_model_version": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Quantile Model Version"
+      },
+      "result": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ForecastResponse"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "runtime_identity": {
+        "additionalProperties": true,
+        "title": "Runtime Identity",
+        "type": "object"
+      },
+      "status": {
+        "enum": [
+          "OK",
+          "PARTIAL",
+          "DATA_INSUFFICIENT",
+          "INPUT_INVALID",
+          "FAILED"
+        ],
+        "title": "Status",
+        "type": "string"
+      }
+    },
+    "required": [
+      "execution_id",
+      "status",
+      "input_digest",
+      "dedup_key",
+      "parameters",
+      "runtime_identity",
+      "quantile_model_version",
+      "input_row_count",
+      "forecast_count",
+      "created_at",
+      "finished_at",
+      "input_batches",
+      "result",
+      "failure"
+    ],
+    "title": "ForecastExecution",
+    "type": "object"
+  },
+  "history": {
+    "$defs": {
+      "ForecastExecutionSummary": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dedup_key": {
+            "title": "Dedup Key",
+            "type": "string"
+          },
+          "execution_id": {
+            "format": "uuid",
+            "title": "Execution Id",
+            "type": "string"
+          },
+          "finished_at": {
+            "format": "date-time",
+            "title": "Finished At",
+            "type": "string"
+          },
+          "forecast_count": {
+            "title": "Forecast Count",
+            "type": "integer"
+          },
+          "input_digest": {
+            "title": "Input Digest",
+            "type": "string"
+          },
+          "input_row_count": {
+            "title": "Input Row Count",
+            "type": "integer"
+          },
+          "parameters": {
+            "$ref": "#/$defs/ForecastRunRequest"
+          },
+          "quantile_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantile Model Version"
+          },
+          "runtime_identity": {
+            "additionalProperties": true,
+            "title": "Runtime Identity",
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "OK",
+              "PARTIAL",
+              "DATA_INSUFFICIENT",
+              "INPUT_INVALID",
+              "FAILED"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "execution_id",
+          "status",
+          "input_digest",
+          "dedup_key",
+          "parameters",
+          "runtime_identity",
+          "quantile_model_version",
+          "input_row_count",
+          "forecast_count",
+          "created_at",
+          "finished_at"
+        ],
+        "title": "ForecastExecutionSummary",
+        "type": "object"
+      },
+      "ForecastRunRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "forecast-run-0.1",
+            "default": "forecast-run-0.1",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "horizon_months": {
+            "default": 3,
+            "maximum": 12,
+            "minimum": 1,
+            "title": "Horizon Months",
+            "type": "integer"
+          },
+          "min_history_months": {
+            "default": 12,
+            "maximum": 120,
+            "minimum": 12,
+            "title": "Min History Months",
+            "type": "integer"
+          },
+          "p50_method": {
+            "default": "MA12",
+            "enum": [
+              "MA12",
+              "LGBM_L1"
+            ],
+            "title": "P50 Method",
+            "type": "string"
+          },
+          "random_seed": {
+            "default": 42,
+            "maximum": 2147483647,
+            "minimum": 0,
+            "title": "Random Seed",
+            "type": "integer"
+          },
+          "trained_until": {
+            "format": "date",
+            "title": "Trained Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trained_until"
+        ],
+        "title": "ForecastRunRequest",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "items": {
+        "items": {
+          "$ref": "#/$defs/ForecastExecutionSummary"
+        },
+        "title": "Items",
+        "type": "array"
+      },
+      "limit": {
+        "title": "Limit",
+        "type": "integer"
+      },
+      "offset": {
+        "title": "Offset",
+        "type": "integer"
+      },
+      "total": {
+        "title": "Total",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "items",
+      "total",
+      "limit",
+      "offset"
+    ],
+    "title": "ForecastHistory",
+    "type": "object"
+  },
+  "reply": {
+    "$defs": {
+      "ForecastAdjustment": {
+        "additionalProperties": true,
+        "properties": {
+          "after": {
+            "$ref": "#/$defs/Quantiles"
+          },
+          "before": {
+            "$ref": "#/$defs/Quantiles"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "target_month": {
+            "title": "Target Month",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "target_month",
+          "code",
+          "before",
+          "after"
+        ],
+        "title": "ForecastAdjustment",
+        "type": "object"
+      },
+      "ForecastExecution": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dedup_key": {
+            "title": "Dedup Key",
+            "type": "string"
+          },
+          "execution_id": {
+            "format": "uuid",
+            "title": "Execution Id",
+            "type": "string"
+          },
+          "failure": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ForecastFailure"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "finished_at": {
+            "format": "date-time",
+            "title": "Finished At",
+            "type": "string"
+          },
+          "forecast_count": {
+            "title": "Forecast Count",
+            "type": "integer"
+          },
+          "input_batches": {
+            "items": {
+              "$ref": "#/$defs/InputBatchSnapshot"
+            },
+            "title": "Input Batches",
+            "type": "array"
+          },
+          "input_digest": {
+            "title": "Input Digest",
+            "type": "string"
+          },
+          "input_row_count": {
+            "title": "Input Row Count",
+            "type": "integer"
+          },
+          "parameters": {
+            "$ref": "#/$defs/ForecastRunRequest"
+          },
+          "quantile_model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantile Model Version"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ForecastResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "runtime_identity": {
+            "additionalProperties": true,
+            "title": "Runtime Identity",
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "OK",
+              "PARTIAL",
+              "DATA_INSUFFICIENT",
+              "INPUT_INVALID",
+              "FAILED"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "execution_id",
+          "status",
+          "input_digest",
+          "dedup_key",
+          "parameters",
+          "runtime_identity",
+          "quantile_model_version",
+          "input_row_count",
+          "forecast_count",
+          "created_at",
+          "finished_at",
+          "input_batches",
+          "result",
+          "failure"
+        ],
+        "title": "ForecastExecution",
+        "type": "object"
+      },
+      "ForecastFailure": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ForecastFailure",
+        "type": "object"
+      },
+      "ForecastIssue": {
+        "additionalProperties": true,
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "loc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Loc"
+          }
+        },
+        "required": [
+          "code",
+          "detail"
+        ],
+        "title": "ForecastIssue",
+        "type": "object"
+      },
+      "ForecastResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "adjustments": {
+            "items": {
+              "$ref": "#/$defs/ForecastAdjustment"
+            },
+            "title": "Adjustments",
+            "type": "array"
+          },
+          "contract_version": {
+            "const": "forecast-output-0.1-draft",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/$defs/ForecastIssue"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "forecasts": {
+            "items": {
+              "$ref": "#/$defs/ForecastValue"
+            },
+            "title": "Forecasts",
+            "type": "array"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ForecastRun"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "skipped": {
+            "items": {
+              "$ref": "#/$defs/SkippedProduct"
+            },
+            "title": "Skipped",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "OK",
+              "PARTIAL",
+              "DATA_INSUFFICIENT",
+              "INPUT_INVALID"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/$defs/ForecastWarning"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "contract_version",
+          "request_id",
+          "status",
+          "run",
+          "forecasts",
+          "skipped",
+          "adjustments",
+          "warnings",
+          "errors"
+        ],
+        "title": "ForecastResponse",
+        "type": "object"
+      },
+      "ForecastRun": {
+        "additionalProperties": true,
+        "properties": {
+          "data_classification": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Classification"
+          },
+          "engine": {
+            "title": "Engine",
+            "type": "string"
+          },
+          "generated_at": {
+            "title": "Generated At",
+            "type": "string"
+          },
+          "horizon_months": {
+            "title": "Horizon Months",
+            "type": "integer"
+          },
+          "input_digest": {
+            "title": "Input Digest",
+            "type": "string"
+          },
+          "p50_method": {
+            "enum": [
+              "MA12",
+              "LGBM_L1"
+            ],
+            "title": "P50 Method",
+            "type": "string"
+          },
+          "quantile_model_version": {
+            "title": "Quantile Model Version",
+            "type": "string"
+          },
+          "random_seed": {
+            "title": "Random Seed",
+            "type": "integer"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "trained_until": {
+            "title": "Trained Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "engine",
+          "p50_method",
+          "quantile_model_version",
+          "trained_until",
+          "horizon_months",
+          "random_seed",
+          "input_digest",
+          "generated_at",
+          "data_classification"
+        ],
+        "title": "ForecastRun",
+        "type": "object"
+      },
+      "ForecastRunRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "forecast-run-0.1",
+            "default": "forecast-run-0.1",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "horizon_months": {
+            "default": 3,
+            "maximum": 12,
+            "minimum": 1,
+            "title": "Horizon Months",
+            "type": "integer"
+          },
+          "min_history_months": {
+            "default": 12,
+            "maximum": 120,
+            "minimum": 12,
+            "title": "Min History Months",
+            "type": "integer"
+          },
+          "p50_method": {
+            "default": "MA12",
+            "enum": [
+              "MA12",
+              "LGBM_L1"
+            ],
+            "title": "P50 Method",
+            "type": "string"
+          },
+          "random_seed": {
+            "default": 42,
+            "maximum": 2147483647,
+            "minimum": 0,
+            "title": "Random Seed",
+            "type": "integer"
+          },
+          "trained_until": {
+            "format": "date",
+            "title": "Trained Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trained_until"
+        ],
+        "title": "ForecastRunRequest",
+        "type": "object"
+      },
+      "ForecastValue": {
+        "additionalProperties": true,
+        "properties": {
+          "horizon": {
+            "title": "Horizon",
+            "type": "integer"
+          },
+          "p50": {
+            "title": "P50",
+            "type": "string"
+          },
+          "p50_method": {
+            "title": "P50 Method",
+            "type": "string"
+          },
+          "p80": {
+            "title": "P80",
+            "type": "string"
+          },
+          "p90": {
+            "title": "P90",
+            "type": "string"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "quantile_model_version": {
+            "title": "Quantile Model Version",
+            "type": "string"
+          },
+          "target_month": {
+            "title": "Target Month",
+            "type": "string"
+          },
+          "trained_until": {
+            "title": "Trained Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "target_month",
+          "horizon",
+          "p50",
+          "p80",
+          "p90",
+          "p50_method",
+          "quantile_model_version",
+          "trained_until"
+        ],
+        "title": "ForecastValue",
+        "type": "object"
+      },
+      "ForecastWarning": {
+        "additionalProperties": true,
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "detail"
+        ],
+        "title": "ForecastWarning",
+        "type": "object"
+      },
+      "InputBatchSnapshot": {
+        "properties": {
+          "approved_at": {
+            "format": "date-time",
+            "title": "Approved At",
+            "type": "string"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "batch_version": {
+            "title": "Batch Version",
+            "type": "integer"
+          },
+          "result_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Digest"
+          },
+          "source_sha256": {
+            "title": "Source Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "batch_id",
+          "batch_version",
+          "source_sha256",
+          "result_digest",
+          "approved_at"
+        ],
+        "title": "InputBatchSnapshot",
+        "type": "object"
+      },
+      "Quantiles": {
+        "additionalProperties": true,
+        "properties": {
+          "p50": {
+            "title": "P50",
+            "type": "string"
+          },
+          "p80": {
+            "title": "P80",
+            "type": "string"
+          },
+          "p90": {
+            "title": "P90",
+            "type": "string"
+          }
+        },
+        "required": [
+          "p50",
+          "p80",
+          "p90"
+        ],
+        "title": "Quantiles",
+        "type": "object"
+      },
+      "SkippedProduct": {
+        "additionalProperties": true,
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "observed_months": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed Months"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "reason_code": {
+            "title": "Reason Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "reason_code",
+          "detail",
+          "observed_months"
+        ],
+        "title": "SkippedProduct",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "execution": {
+        "$ref": "#/$defs/ForecastExecution"
+      },
+      "reused": {
+        "title": "Reused",
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "execution",
+      "reused"
+    ],
+    "title": "ForecastRunReply",
+    "type": "object"
+  },
+  "request": {
+    "additionalProperties": false,
+    "properties": {
+      "contract_version": {
+        "const": "forecast-run-0.1",
+        "default": "forecast-run-0.1",
+        "title": "Contract Version",
+        "type": "string"
+      },
+      "horizon_months": {
+        "default": 3,
+        "maximum": 12,
+        "minimum": 1,
+        "title": "Horizon Months",
+        "type": "integer"
+      },
+      "min_history_months": {
+        "default": 12,
+        "maximum": 120,
+        "minimum": 12,
+        "title": "Min History Months",
+        "type": "integer"
+      },
+      "p50_method": {
+        "default": "MA12",
+        "enum": [
+          "MA12",
+          "LGBM_L1"
+        ],
+        "title": "P50 Method",
+        "type": "string"
+      },
+      "random_seed": {
+        "default": 42,
+        "maximum": 2147483647,
+        "minimum": 0,
+        "title": "Random Seed",
+        "type": "integer"
+      },
+      "trained_until": {
+        "format": "date",
+        "title": "Trained Until",
+        "type": "string"
+      }
+    },
+    "required": [
+      "trained_until"
+    ],
+    "title": "ForecastRunRequest",
+    "type": "object"
+  }
+}

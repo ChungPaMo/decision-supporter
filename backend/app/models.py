@@ -262,6 +262,7 @@ class DemandForecast(Base):
     __tablename__ = "demand_forecast"
 
     forecast_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    forecast_run_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("forecast_run.execution_id"))
     product_id: Mapped[str] = mapped_column(ForeignKey("product.product_id"))
     target_month: Mapped[str] = mapped_column(String(7))       # YYYY-MM
     horizon: Mapped[int] = mapped_column(Integer)
@@ -277,8 +278,46 @@ class DemandForecast(Base):
         CheckConstraint("horizon >= 1", name="ck_forecast_horizon"),
         CheckConstraint("p50 >= 0 AND p50 <= p80 AND p80 <= p90", name="ck_forecast_quantiles"),
         CheckConstraint(f"target_month ~ '{PERIOD_RE}'", name="ck_forecast_month"),
-        UniqueConstraint("product_id", "target_month", "horizon", "quantile_model_version", "trained_until", name="uq_forecast_run"),
+        UniqueConstraint("forecast_run_id", "product_id", "target_month", "horizon", name="uq_forecast_execution_row"),
+        Index("uq_forecast_legacy", "product_id", "target_month", "horizon", "quantile_model_version", "trained_until",
+              unique=True, postgresql_where=text("forecast_run_id IS NULL")),
     )
+
+
+class ForecastExecution(Base):
+    __tablename__ = "forecast_run"
+    execution_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    dedup_key: Mapped[str] = mapped_column(String(64))
+    input_digest: Mapped[str] = mapped_column(String(71))
+    parameters: Mapped[dict] = mapped_column(JSONB)
+    input_snapshot: Mapped[dict] = mapped_column(JSONB)
+    runtime_identity: Mapped[dict] = mapped_column(JSONB)
+    input_row_count: Mapped[int] = mapped_column(Integer)
+    forecast_count: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(24))
+    quantile_model_version: Mapped[str | None] = mapped_column(String(60))
+    result: Mapped[dict | None] = mapped_column(JSONB)
+    failure: Mapped[dict | None] = mapped_column(JSONB)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    finished_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default=func.clock_timestamp())
+    __table_args__ = (
+        CheckConstraint("input_row_count >= 0"), CheckConstraint("forecast_count >= 0"),
+        CheckConstraint("status IN ('OK','PARTIAL','DATA_INSUFFICIENT','INPUT_INVALID','FAILED')"),
+        CheckConstraint("(status = 'FAILED' AND result IS NULL AND failure IS NOT NULL AND forecast_count = 0) OR "
+                        "(status <> 'FAILED' AND result IS NOT NULL AND failure IS NULL AND result->>'status' = status)", name="ck_forecast_run_result"),
+        Index("uq_forecast_dedup_completed", "dedup_key", unique=True, postgresql_where=text("status <> 'FAILED'")),
+        Index("ix_forecast_run_created", text("created_at DESC"), text("execution_id DESC")),
+    )
+
+
+class ForecastInputBatch(Base):
+    __tablename__ = "forecast_run_input"
+    execution_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("forecast_run.execution_id"), primary_key=True)
+    batch_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("import_batch.batch_id"), primary_key=True)
+    batch_version: Mapped[int] = mapped_column(Integer)
+    source_sha256: Mapped[str] = mapped_column(String(64))
+    result_digest: Mapped[str | None] = mapped_column(String(64))
+    approved_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True))
 
 
 # 승인 트리거를 붙일 테이블 (migrations/versions 의 초기 마이그레이션에서 사용)

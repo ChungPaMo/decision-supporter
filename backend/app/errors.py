@@ -18,6 +18,10 @@ class ErrorCode(StrEnum):
     PERSISTENCE_DISABLED = "PERSISTENCE_DISABLED"          # 501 서버에 DB 저장이 켜져 있지 않음 (PERSISTENCE=postgres 필요)
     DB_UNAVAILABLE = "DB_UNAVAILABLE"                      # 503 DB 연결 실패
     PERSISTENCE_ERROR = "PERSISTENCE_ERROR"                # 500 저장 실패 (롤백됨, 상태 변경 없음)
+    FORECAST_ENGINE_UNAVAILABLE = "FORECAST_ENGINE_UNAVAILABLE"  # 503 예측 의존성 미설치
+    FORECAST_ENGINE_ERROR = "FORECAST_ENGINE_ERROR"          # 500 예측 실행/출력 오류
+    FORECAST_IN_PROGRESS = "FORECAST_IN_PROGRESS"            # 409 같은 스냅샷 실행 중
+    FORECAST_NOT_FOUND = "FORECAST_NOT_FOUND"                # 404 실행 이력 없음
     # --- 파일 (ingest.parsing.FileError 와 동일) ---
     UNSUPPORTED_TYPE = "UNSUPPORTED_TYPE"                  # 415
     FILE_EMPTY = "FILE_EMPTY"                              # 422
